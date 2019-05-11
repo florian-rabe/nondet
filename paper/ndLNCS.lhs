@@ -12,6 +12,10 @@
 \def\commentbegin{\quad$\{$~}
 \def\commentend{$\}$}
 
+\pagestyle{plain} % remove for final version
+
+\setcounter{tocdepth}{2} % for pdf bookmarks
+\usepackage[bookmarks,bookmarksnumbered,bookmarksopen,colorlinks,citecolor=red]{hyperref}
 
 \begin{document}
 \bibliographystyle{plain}
@@ -155,7 +159,7 @@ reasoning with any definition of |minWith| is simply not adequate to provide it.
 We fortify our intuitions and introduce all syntax in Section~\ref{sec:syn}, which also works out the applications foreshadowed above.
 Section~\ref{sec:calc} gives a formal calculus and Section~\ref{sec:sem} a denotational semantics for our language.
 The soundness of the semantics establishes the consistency of the calculus.
-We have formalized syntax, calculus, and semantics in the logical framework LF \cite{lf}; the formalization is not part of this paper but is available online\footnote{\url{.
+We have formalized syntax, calculus, and semantics in the logical framework LF \cite{lf}; the formalization is not given in this paper but is available online\footnote{\url{https://github.com/florian-rabe/nondet}}.
 
 \section{Nondeterminism and refinement}\label{sec:syn}
 
@@ -363,7 +367,7 @@ refinement and to give a model to show the soundness and consistency of the axio
 Essentially, this axiomatisation is the one proposed in \cite{m&b,m&b2} but simplified by
 leaving out some details inessential for our purposes.
 
-\section{An axiomatic basis}
+\section{An axiomatic basis}\label{sec:calc}
 
 %format E_n = "\Varid{E}_n"
 %format E_i = "\Varid{E}_i"
@@ -572,7 +576,7 @@ Here $\pure{e}$ is the purity predicate, whose axioms are described above.
 %format sse = "\mathbin{\subseteq}"
 %format <.> = "\, | \,"
 
-\section{A denotational semantics}
+\section{A denotational semantics}\label{sec:sem}
 
 %% FR I made more disruptive changes in this section than in the previous one; so changes are not marked anymore
 
