@@ -151,7 +151,13 @@ reasoning that allows us to establish the necessary fusion condition from the si
 condition (\ref{mono2}) alone, and the plain fact of the matter is that equational 
 reasoning with any definition of |minWith| is simply not adequate to provide it.
 
-\section{Nondeterminism and refinement}
+\paragraph{Overview}
+We fortify our intuitions and introduce all syntax in Section~\ref{sec:syn}, which also works out the applications foreshadowed above.
+Section~\ref{sec:calc} gives a formal calculus and Section~\ref{sec:sem} a denotational semantics for our language.
+The soundness of the semantics establishes the consistency of the calculus.
+We have formalized syntax, calculus, and semantics in the logical framework LF \cite{lf}; the formalization is not part of this paper but is available online\footnote{\url{.
+
+\section{Nondeterminism and refinement}\label{sec:syn}
 
 It follows that we have to abandon equational reasoning. One approach
 is to replace our functional framework with a relational one, and to reason 
@@ -935,18 +941,24 @@ Richard S. Bird and Oege de Moor.
 \newblock Prentice-Hall International Series in Computer Science, Hemel
 Hempstead, UK (1997).
 
-\bibitem[2]{m&b}
+\bibitem[2]{lf}
+R.~Harper, F.~Honsell, and G.~Plotkin.
+\newblock {A framework for defining logics}.
+\newblock {\em {Journal of the Association for Computing Machinery}},
+  40(1):143--184, 1993.
+
+\bibitem[3]{m&b}
 Joseph M. Morris and Alexander Bunkenburg. 
 \newblock Specificational functions.
 \newblock \emph{ACM Transactions on Programming Languages and Systems},
 21 (3) (1999) pp 677--701.
 
-\bibitem[3]{m&b2}
+\bibitem[4]{m&b2}
 Joseph M. Morris and Alexander Bunkenburg. 
 \newblock Partiality and Nondeterminacy in Program Proofs
 \newblock\emph{Formal Aspects of Computing} 10 (1998) pp 76--96.
 
-\bibitem[4]{m&t}
+\bibitem[5]{m&t}
 Joseph M. Morris and Malcolm Tyrrell.
 \newblock Dually nondeterministic functions.
 \newblock\emph{ACM Transactions on Programming Languages and Systems},

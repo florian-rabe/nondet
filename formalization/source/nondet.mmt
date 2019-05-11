@@ -1,0 +1,194 @@
+namespace latin:/nondet❚
+
+fixmeta ur:?PLF❚
+
+theory Syntax =
+  # Syntactic Categories and Judgments❙
+
+  include latin:/?TypedTerms❙
+  include latin:/?TypedEquality❙
+  
+  eqT = [a,x,y: tm a] ⊦ x ≐ y❘# 2 == 3❙
+  
+  ## Refinement❙
+
+  /T For a type [A: tp] and two terms [x:tm A, y: tm A], the condition $x ← y$ means that $y$ refines into $x$.❙
+  refine: {A} tm A ⟶ tm A ⟶ type❘# 3 ← 2 prec 30❙
+
+  /T congruence rule for refinement ❙
+  refine_cong: {A,x,v,y,w:tm A} v ← x ⟶ x == y ⟶ v == w ⟶ w ← y❙
+  
+  /T Refinement is an order at each type.❙
+  refine_refl : {A,x:tm A} x ← x❙
+  refine_trans: {A,x,y,z:tm A} x ← y ⟶ y ← z ⟶ x ← z❙
+  refine_antisym: {A,x,y:tm A} x ← y ⟶ x ← y ⟶ x == y❙
+  
+  // The paper uses the condition x ← y iff {v}v ← x ⟶ v ← y, which is equivalent to ← being reflexive and transitive.
+     The paper uses antisymmetry as the definition of equality, which is equivalent to congruence and antisymmetry.❙ 
+  
+  ## Purity❙
+
+  /T A term is pure if it is a deterministic value, i.e., evaluates to a single value rather than a choice of values.❙ 
+  pure : {A} tm A ⟶ type❘# pure 2❙
+  
+  # Types, Terms, and Their Rules❙
+  
+  ## Function Types❙
+
+  ### Types and Terms❙
+  
+  /T We write $A -< B$ for the type of non-deterministic functions between types [A: tp, B: tp]❙
+  fun : tp ⟶ tp ⟶ tp❘# 1 -< 2 prec 30❙
+  
+  /T λ-abstraction is as usual except for variables ranging over pure terms only,
+     i.e., the bound variable is assumed to be pure.❙
+  lambda : {A,B} ({x:tm A} tm B) ⟶ tm A -< B❘# λ 3❙
+  
+  /T application is as usual.❙
+  apply : {A,B} tm A -< B ⟶ tm A ⟶ tm B❘# 3 @ 4 prec 50❙
+
+  ### Equality Rules❙
+  
+  /T Congruence for substitution under a λ-abstraction.
+     Note that when reasoning about the body of a binding, we must add the assumption that the bound variable is pure.❙
+  xi : {A,B,F: tm A ⟶ tm B,G:tm A ⟶ tm B} ({x} pure x ⟶ F x == G x) ⟶ λ F == λ G❙
+  
+  /T β-reduction is as usual except that the argument must be pure.
+     That makes sense because the variable which the argument substitutes
+     was assumed to be pure when the λ-abstraction was formed.❙
+  beta : {A,B,F: tm A ⟶ tm B, a} pure a ⟶ (λ [x] F x)@a == (F a)❙
+  
+  /T η-expansion is as usual but only for pure functions. This makes sense because all λ-abstractions are pure.❙
+  eta : {A,B, f: tm A -< B} pure f ⟶ f == λ [x] f @ x❙
+
+  ### Refinement Rules❙
+
+  /T A λ-abstraction refines to a function if its body refines for all arguments.❙
+  refine_lambda: {A,B,F:tm A ⟶ tm B, f} ({x} f@x ← (F x)) ⟶ f ← λ[x] F x❙
+  // The paper has the condition in both directions. The other direction follows using refine_apply.❙
+  
+  /T Application is monotone with respect to refinement.❙
+  refine_apply : {A,B, f,g: tm A -< B, x,y:tm A} f ← g ⟶ x ← y ⟶ (f@x) ← (g@y)❙
+  // The paper has the equivalent condition x ← F E iff exist f,e such that f ← F, e ← E, x ← f e.❙
+  
+  ### Purity Rules❙
+
+  /T λ-abstractions are always pure, at least at level 0.❙
+  pure_lambda : {A,B,F: tm A ⟶ tm B} pure λ[x] F x❙
+  
+  // The paper has pure_lambda only for a single λ-abstraction but not for nested ones.
+  It claims that that is equivalent to β-reduction returning a pure expression; which is closer to pure_lambda. But the two are not equivalent, e.g., consider (λ[x]λ[f]f@x)0 succ.❙
+  
+  ## Base Types❙
+
+  /T Booleans❙
+  bool: tp❙
+  tt : tm bool❙
+  ff : tm bool❙
+
+  /T Integers❙
+  int : tp❙
+  zero : tm int❙
+  one  : tm int❙
+  plus : tm int -< (int -< int)❙
+  
+  /T All base constants are pure for all arguments.❙
+  
+  pure_tt   : pure tt❙
+  pure_ff   : pure ff❙
+  pure_zero : pure zero❙
+  pure_one  : pure one❙
+  pure_plus : {x,y} pure x ⟶ pure y ⟶ pure plus @ x @ y❙
+
+  ## Non-Deterministic Terms❙
+  
+  ### Terms
+  
+  /T For a type [A:tp] and two terms [x: tm A, y: tm A],
+     the term $x⊓y$ is the non-deterministic choice between $x$ and $y$.❙
+  nd : {A} tm A ⟶ tm A ⟶ tm A❘# 2 ⊓ 3 prec 50❙
+  
+  ### Equality Rules❙
+  
+  /T Choice is associative, commutative, and idempotent.
+     It does not have a neutral element because our calculus does not have undefined terms,
+     which would correspond to the empty choice.❙
+  nd_assoc : {A,x,y,z:tm A} (x⊓y)⊓z == x⊓(y⊓z)❙ 
+  nd_comm  : {A,x,y:tm A} x⊓y == y⊓x❙
+  nd_idem  : {A,x:tm A} x⊓x == x❙
+  // These follow from the refinement rule used in the paper.❙
+
+  ### Refinement Rules❙
+
+  /T A non-deterministic term refines into any of its options and is a least upper bound in that sense.❙
+  
+  refine_nd_left  : {A,x,y:tm A} x ← x⊓y❙ 
+  refine_nd_right : {A,x,y:tm A} y ← x⊓y❙
+  refine_nd_lub   : {A,x,y,u:tm A} x ← u ⟶ y ← u ⟶ x⊓y ← u❙
+
+  /T Function application distributes over choice.❙
+  refine_nd_apply : {A,B,f:tm A -< B, x,y} f@(x⊓y) == (f@x)⊓(f@y)❙
+
+  // The paper uses ⊓/L for non-empty lists of arguments, which is equivalent to binary ⊓.
+     The paper uses the condition v ← ⊓/L iff v ← x for some x in L.
+     The right-to-left direction of that condition is equivalent the rules above.
+     The left-to-right direction does not hold if v can be arbitrary: 1⊓3 ← (1⊓2)⊓(3⊓4) but neither 1⊓3←1⊓2 nor 1⊓3←3⊓4. It hold only if quantifiers range only over pure expressions, which is mentioned but not spelt out in the paper.
+     Using the condition from the paper, refine_nd_apply is provable.❙
+  
+  ### Purity Rules❙
+
+  /T There are no rules because non-deterministic terms are not pure.❙
+❚
+
+/T We use higher-order logic as the domain in which we interpret the syntax.
+Types will be interpreted as orders, which we define quickly.❚
+theory Order : latin:/?HOL =
+  univ: tp❙
+  leq : tm univ ⟶ tm univ ⟶ prop ❘# 1 ≤ 2❙
+❚
+
+fixmeta http://gl.mathhub.info/MMT/LFX/Records?LFRecords❚
+
+theory SemanticDomain =
+  include latin:/?HOL❙
+  include latin:/powertypes?PowerSFOL❙
+  
+  int : tp❙
+
+  ndfun : tp ⟶ tp ⟶ tp❘= [a,b] a → ℘ b❘# 1 -< 2❙
+  
+  Order : type ❘= Mod ?Order❙
+  univ : {o: Order} tp ❘ = [o] o.univ❘# | 1 |❙
+  leq : {o: Order} tm |o| ⟶ tm |o| ⟶ prop❘= [o,x,y] (o.leq) x y❘# 2 ≤ 1 3❙
+  
+  discreteOrder: tp ⟶ Order❘= [a] [' univ := a, leq := ([x,y]x≐y) ']❙
+  funcOrder : tp ⟶ tp ⟶ Order❘= [a,b] [' univ := a -< b, leq := ([f,g] ∀[x]g@x ⊆ f@x) ']❙  
+  
+  upclosure : {o:Order} tm |o| ⟶ tm ℘|o|❘= [o,x] filter [y] x ≤o y❘# 2 ↑ 1 prec 50❙  
+  primitive : {o:Order} tm ℘|o| ⟶ prop❘= [o,p] ∃[x] p ≐ x↑o❙
+  
+❚
+
+view Semantics : ?Syntax -> ?SemanticDomain =
+  prop = prop❙
+  ded = ded❙
+
+  tp = Order❙
+  int = discreteOrder int❙
+  bool = discreteOrder bool❙
+  fun = [o,p] funcOrder |o| |p|❙
+
+
+  tm = [o] tm ℘ o.univ❙
+  refine = [a,x,y] ⊦ x ⊆ y❙
+  pure = [o,x] ⊦ primitive o x❙ 
+
+  lambda = [o,p,F] (λ[x] F (x↑o))↑(funcOrder |o| |p|)❙
+  apply = [o,p,F,X] ⋃ (F map [f] ⋃ (X map [x] f@x))❙ 
+  
+  nd = [A,x,y] x ∪ y❙
+
+  equal = [o,x,y] x ≐ y❙
+  refl  = [o,x] refl❙
+  
+❚
