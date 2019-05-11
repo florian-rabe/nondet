@@ -354,7 +354,7 @@ function of interest in the study of deriving algorithms from specifications.
 
 The task now before us is to find a suitable axiomatisation for a theory of
 refinement and to give a model to show the soundness and consistency of the axioms. 
-Essentially, this axiomatisation is the one proposed in \cite{m&b} but simplified by
+Essentially, this axiomatisation is the one proposed in \cite{m&b,m&b2} but simplified by
 leaving out some details inessential for our purposes.
 
 \section{An axiomatic basis}
@@ -376,7 +376,7 @@ We also have
     MinWith f xs  = foldr1 (?) [x | x <- xs, and [f x <= f y | y <- xs]]
 \end{spec}
 so |MinWith| can be defined in terms of |(?)|. Below we write |choose| for |foldr1 (?)|.
-Thus |choose| takes a finite, nonempty list as argument and returns an arbitrary element
+Thus |choose| takes a finite, nonempty list of arguments and returns an arbitrary element
 of the list.
 
 To formulate the axioms we need a language of types and expressions, and we
@@ -392,30 +392,43 @@ it is simpler to omit them. Expressions are given by the grammar
 \end{spec}
 where |n>0| and each of |E1, E2,...,E_n| are expressions of the same type. We  
 write |E1 ? E2| for |choose [E1,E2]|. Included in the constants |C| are constant 
-functions such as the successor function on integers or negation on Booleans. The typing rules are 
-standard; in particular, |E1 ? E2|, has type |T| if both |E1| and |E2| do.
+functions such as the addition function |+| on integers (written infix as usual) and integer literals |0,1,-1,...|. The typing rules are 
+standard; in particular, |choose [E1,E2,...,E_n]|, has type |T| if all |E_i| do.
 
-In order to state the axioms, we need to distinguish a subclass of the
-expressions, called \emph{pure} expressions. An expression is pure if it is
-\begin{enumerate}
-\item A constant, or a constant function applied only to pure expressions.
-\item A variable.
-\item A list of pure expressions.
-\item An application of a lambda abstraction with a pure body to a pure
-      expression. Equivalently, if the expression can be converted into
-      a pure expression by |beta|-reduction (see below).
-\item A lambda abstraction, whose body may or may not be pure.
-\end{enumerate} 
-For example, |2| is a pure expression and so is |(+) E1 E2| provided both |E1| and |E2| are. 
-However, |id ? const 3| and |2 ? 2| are both impure, even though |2 ? 2| describes a single 
-value. The lambda expression |\y -> 1?y| is pure but applying it to any expression gives an 
-impure result. Finally, |(\x -> \y -> x?y)1| is pure, and equivalent by |beta|-reduction 
-to the pure expression |\y ->1?y|. The intention is to define a semantics in which a pure 
-expression denotes a single value, except for lambda abstractions with impure bodies,
-which denote a set of functions. In what follows we use lowercase letters for pure 
-expressions and uppercase letters for possibly impure expressions. 
+%%\begin{enumerate}
+%%\item A constant, or a constant function applied only to pure expressions.
+%%\item A variable.
+%%\item A list of pure expressions.
+%%\item An application of a lambda abstraction with a pure body to a pure
+%%      expression. Equivalently, if the expression can be converted into
+%%      a pure expression by |beta|-reduction (see below).
+%%\item A lambda abstraction, whose body may or may not be pure.
+%%\end{enumerate} 
+%%For example, |2| is a pure expression and so is |(+) E1 E2| provided both |E1| and |E2| are. 
+%%However, |id ? const 3| and |2 ? 2| are both impure, even though |2 ? 2| describes a single 
+%%value. The lambda expression |\y -> 1?y| is pure but applying it to any expression gives an 
+%%impure result. Finally, |(\x -> \y -> x?y)1| is pure, and equivalent by |beta|-reduction 
+%%to the pure expression |\y ->1?y|.
+%%FR start
+\def\pure#1{\mathit{pure}(#1)}
+Boolean formulas are formed using equality |E1 = E2| and refinement |E1 <~ E2| of expressions as well as universal and existential quantification and the propositional connectives in the usual way.
+Additionally, in order to state the axioms, we need a predicate $\pure{E}$ to distinguish the a subclass of
+expressions, called \emph{pure} expressions.
+The intention is to define a semantics in which a pure expression denotes a single value, except for lambda abstractions with impure bodies,
+which denote a set of functions.
+We add rules such that $\pure{E}$ holds if |E| is
+\begin{itemize}
+\item a constant |C| applied to any number of pure arguments (including |C| itself if there are no arguments),
+\item a lambda abstraction (independent of whether its body is pure).
+\end{itemize} 
+Because purity is a normal predicate, it is closed under equality, i.e., an expression is also pure if it is equal to a pure expression.
+For example, |2| and |E1 + E2| for pure |E1| and |E2| are pure because |2| and |+| are constants.
+|\y ->1?y| is pure because it is a lambda abstraction, and |(\x -> \y -> x?y)1| is pure because it is equal by |beta|-reduction (see below) to the former.
+|2 ? 2| is pure because it is equal to |2| (using the axioms given below), but |(\y ->1?y)2| and |1 ? 2| are impure.
+In what follows we use lowercase letters for pure expressions and uppercase letters for possibly impure expressions. 
+%%FR end
 
-%format `vee` = "\mathbin{\,\vee\,}"
+%format vee = "\mathbin{\,\vee\,}"
 
 The reason for introducing pure expressions is in the statement of our 
 first two axioms, the rules of |beta| and |eta| conversion. The |beta| rule is that if 
@@ -425,31 +438,52 @@ first two axioms, the rules of |beta| and |eta| conversion. The |beta| rule is t
 |(\x -> E)e| &=& |E(x:=e)|
 \end{eqnarray}
 where |E(x:=e)| denotes the expression |E| with all free occurrences of |x| replaced by |e|.
-In particular, since variables are pure we have |E = (\x -> E) x|.
+%% FR
+Intuitively, the purity restriction to |beta|-reduction makes sense because the bound variable of the lambda abstraction only ranges over values and therefore may only be substituted with pure expressions.
+%%In particular, since variables are pure we have |E = (\x -> E) x|.
 
 The |eta| rule asserts that if |f| is a pure function, then
 \begin{eqnarray}
 \label{eta}
 |f|          &=& |\x -> f x|
 \end{eqnarray}
-As we will see below, without the purity restriction we could derive a contradiction 
+%%FR
+The purity restriction to |eta|-expansion makes sense because lambda-abstractions are always pure and thus can never equal an impure function.
+
+%%FR start
+\def\rul#1#2{\frac{#1}{#2}}
+\def\tb{\;\;\;\;}
+\def\vd{\;\vdash\;}
+
+Our notion of purity corresponds to the \emph{proper} expressions of \cite{m&b} except that we avoid the axiom that variables are pure.
+Our first draft used that axiom, but we were unable to formalize the calculus until we modified that aspect.
+The reason why that axiom is problematic is that it forces a distinction between meta-variables (which may be impure) and object variables (which must be pure).
+That precludes using higher-order abstract syntax when representing and reasoning about the language, e.g., in a logical framework like \cite{lf}, and highly complicates the substitution properties of the language.
+However, just like in \cite{m&b}, our binders will range only over values, which our calculus captures by adding a purity assumption for the bound variable whenever traversing into the body of a binder.
+For example, the $\xi$ rule for equality reasoning under a lambda becomes:
+\[\rul{\pure{x}\vd E=F}{\vd \lambda x . E = \lambda x .F}\]
+%%FR end
+
+As we will see below, without the above purity restrictions we could derive a contradiction 
 with the remaining four axioms, which are as follows:
 \begin{eqnarray}
 \label{refines}
    |E1 <~ E2|     &|<==>|& |forall x . x <~ E1 ==> x <~ E2|\\
 \label{equality}
    |E1 = E2|      &|<==>|& |forall x . x <~ E1 <==> x <~ E2|\\
+%%FR reformulate the choice rule to avoid the dependency on natural numbers and lists
 \label{choice}
-   |x <~  choose [E1,E2,...,E_n]| &|<==>|& | exists i . x <~ E_i| \\
+   |x <~  choose [E1,E2,...,E_n]| &|<==>|& |  x <~ E1 vee x <~ E2 vee ... vee x <~ E_n| \\
 \label{apply}
    |x <~ F E|     &|<==>|& |exists f,e . f <~ F && e <~ E && x <~ f e|\\ 
 \label{lambda}
    |f <~ \x -> E| &|<==>|& |forall x . f x <~ E|
 \end{eqnarray} 
-In these axioms |x| and |f| denote variables. From (\ref{refines}) and (\ref{equality})
+Recall that free lower case variables range over pure expressions only, i.e., the free variables |x| and |f| are assumed pure.
+
+From (\ref{refines}) and (\ref{equality})
 we obtain that |(<~)| is reflexive, transitive and anti-symmetric. From 
 (\ref{choice}) we obtain that |(?)| is associative, commutative and idempotent. 
-
 Axioms (\ref{choice}) and (\ref{apply}) are sufficient to establish
 \begin{eqnarray}
 \label{distrib}
@@ -505,6 +539,20 @@ Finally, (\ref{apply}) gives us that
     F1 <~ F2   ==>   F1 . G <~ F2 . G
 \end{spec}
 where |(.) = (\f -> \g -> \x -> f (g x))|.
+
+%%FR start
+To finish the presentation of the calculus, we have to give the rules for the logical operators, which we used in the axioms.
+The rule for the propositional connectives are the standard ones, and we omit them.
+But the rules for the quantifies are subtle because we have to ensure the quantifiers range over pure expressions only.
+In single-conclusion natural deduction style, these are
+\[\Large\begin{array}{ccc}
+\rul{\pure{x} \vd F}{\vd \forall x : F} & \tb\tb &
+\rul{\vd \forall x : F \tb \vd \pure{e}}{\vd F(x:=e)} \\[.2cm]
+\rul{\vd F(x:=e) \tb \vd\pure{e}}{\vd \exists x : F} & \tb\tb &
+\rul{\vd \exists x : F \tb \pure{x},\;F\vd G}{ \vd G}
+\end{array}\]
+Here $\pure{e}$ is the purity predicate, whose axioms are described above.
+%%FR end
   
 %format lb = "\llbracket\!"
 %format rb = "\!\rrbracket"
@@ -517,7 +565,7 @@ where |(.) = (\f -> \g -> \x -> f (g x))|.
 %format sse = "\mathbin{\subseteq}"
 %format <.> = "\, | \,"
 
-\section{A denotational sematics}
+\section{A denotational semantics}
 
 %format myexists = "\exists"
 %format myforall = "\forall"
