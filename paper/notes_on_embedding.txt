@@ -1,0 +1,40 @@
+Let <x> and [x] be the interpretation functions of deterministic resp. non-deterministic lambda calculus.
+We want to define an embedding e_T: <T> -> [T] for every type T.
+
+For base types B, <B> = [B] and e_B = \x.x.
+
+For function types S -> T, we have f and need f' := e_{S->T}(f) such that
+
+     f
+<S> ---> <T>
+ |        | e_T
+ |        v
+ | e_S   [T]
+ |        | l_T
+ v   f'   v
+[S] ---> P[T]
+
+where l_T is the refinement closure.
+
+We could try
+f'(s) \bigcup { l_T( e_T(f(x)) ) | e_S(x) = s}
+
+But it's not clear when e_S is surjective. If it isn't, f'(s) could be empty, which is not allowed.
+
+A more generous definition is
+f'(s) \bigcup { l_T( e_T(f(x)) ) | e_S(x) \leq_S s}
+where \leq_S is the refinement ordering.
+But it's also not clear if that is sufficient.
+
+Moreover, there is a problem with calling f(x) if S is a function type.
+In that case, we only pass single deterministic functions x into f.
+That produces too small a result set if f uses its argument more than once, if f is the map function.
+
+For example, consider
+f = \g: Int->Int. g 1 + g 2
+e = \x:Int. x ? -x
+We have f e = -3 ? -1 ? 1 ? -3
+
+But e_{S->T}(<f>) != [f]
+because evaluating e_{S->T}(<f>)([e]) calls <f> only on any function g such that g(x)\in \{x,-x\}.
+What we want is to choose differently for each occurrence of g.
