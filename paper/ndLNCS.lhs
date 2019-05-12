@@ -147,32 +147,29 @@ not have a smaller cost we have to show that
 |cost c1 <= cost c2  ^  ==>  ^  cost (add x c1) <= cost (add x c2)|
 \end{equation}
 for all |c1| and |c2|. The conjunction of (\ref{mono1}) and (\ref{mono2}) is (\ref{strong}).
-The problem is that (\ref{strong}) is so strong that it rarely holds in 
-practice. A similar condition is needed if, say, |minWith| returned the
-last element in a list with minimum cost, so the problem is not to do with the
-specific definition of |minWith|. What we really need is a form of 
-reasoning that allows us to establish the necessary fusion condition from the simple monotonicity
-condition (\ref{mono2}) alone, and the plain fact of the matter is that equational 
-reasoning with any definition of |minWith| is simply not adequate to provide it.
+The problem is that (\ref{strong}) is so strong that it rarely holds in practice. A similar 
+condition is needed if, say, |minWith| returned the last element in a list with minimum cost, 
+so the problem is not to do with the specific definition of |minWith|. What we really need 
+is a form of reasoning that allows us to establish the necessary fusion condition from the 
+simple monotonicity condition (\ref{mono2}) alone, and the plain fact of the matter is that 
+equational reasoning with any definition of |minWith| is simply not adequate to provide it.
 
-\paragraph{Overview}
-We fortify our intuitions and introduce all syntax in Section~\ref{sec:syn}, which also works out the applications foreshadowed above.
-Section~\ref{sec:calc} gives a formal calculus and Section~\ref{sec:sem} a denotational semantics for our language.
+It follows that we have to abandon equational reasoning.  One approach is to replace our 
+functional framework with a relational one, and to reason instead about the inclusion of one 
+relation in another. Such an approach has been suggested in a number of places, including our 
+own \cite{bird&demoor}. But, for the purposes of presenting a simple introduction to the 
+subject of greedy algorithms in Haskell, this solution is way too drastic, more akin to 
+a heart transplant than a tube of solvent for occasional use. The alternative, if it can be 
+made to work smoothly, is to introduce nondeterministic functions, also called 
+\emph{multi-valued} functions in mathematics, and to reason about refinement. 
+
+The necessary
+intuitions and syntax are introduced in Section~\ref{sec:syn}. Section~\ref{sec:calc} gives 
+a formal calculus and Section~\ref{sec:sem} a denotational semantics for our language.
 The soundness of the semantics establishes the consistency of the calculus.
-We have formalized syntax, calculus, and semantics in the logical framework LF \cite{lf}; the formalization is not given in this paper but is available online\footnote{\url{https://github.com/florian-rabe/nondet}}.
+We have formalised syntax, calculus, and semantics in the logical framework LF \cite{lf}; the formalisation is not given in this paper but is available online\footnote{\url{https://github.com/florian-rabe/nondet}}.
 
 \section{Nondeterminism and refinement}\label{sec:syn}
-
-It follows that we have to abandon equational reasoning. One approach
-is to replace our functional framework with a relational one, and to reason 
-instead about the inclusion of one relation in another. Such an approach has 
-been suggested in a number of places, including our own \cite{bird&demoor}. 
-But, for the purposes of presenting a simple introduction to the subject of
-greedy algorithms in Haskell, this solution is way too drastic, more akin to 
-a heart transplant than a tube of solvent for occasional use. The alternative, 
-if it can be made to work smoothly, is to introduce nondeterministic functions, 
-also called \emph{multi-valued} functions in mathematics, and to reason about 
-refinement.
 
 Suppose we introduce |MinWith| as a nondeterministic function, specified only 
 by the condition that if |x| is a possible value of |MinWith f xs|,
@@ -422,21 +419,25 @@ standard; in particular, |choose [E1,E2,...,E_n]|, has type |T| if all |E_i| do.
 %%to the pure expression |\y ->1?y|.
 %%FR start
 \def\pure#1{\mathit{pure}(#1)}
-Boolean formulas are formed using equality |E1 = E2| and refinement |E1 <~ E2| of expressions as well as universal and existential quantification and the propositional connectives in the usual way.
-Additionally, in order to state the axioms, we need a predicate $\pure{E}$ to distinguish the a subclass of
-expressions, called \emph{pure} expressions.
-The intention is to define a semantics in which a pure expression denotes a single value, except for lambda abstractions with impure bodies,
-which denote a set of functions.
+Boolean formulas are formed using equality |E1 = E2| and refinement |E1 <~ E2| of expressions 
+as well as universal and existential quantification and the propositional connectives in the 
+usual way. Additionally, in order to state the axioms, we need a predicate $\pure{E}$ to 
+distinguish a subclass of expressions, called \emph{pure} expressions. The intention is to 
+define a semantics in which a pure expression denotes a single value, except for lambda 
+abstractions with impure bodies, which denote a set of functions.
 We add rules such that $\pure{E}$ holds if |E| is
 \begin{itemize}
-\item a constant |C| applied to any number of pure arguments (including |C| itself if there are no arguments),
+\item a constant |C| applied to any number of pure arguments (including |C| itself if 
+there are no arguments),
 \item a lambda abstraction (independent of whether its body is pure).
 \end{itemize} 
-Because purity is a normal predicate, it is closed under equality, i.e., an expression is also pure if it is equal to a pure expression.
-For example, |2| and |E1 + E2| for pure |E1| and |E2| are pure because |2| and |+| are constants.
-|\y ->1?y| is pure because it is a lambda abstraction, and |(\x -> \y -> x?y)1| is pure because it is equal by |beta|-reduction (see below) to the former.
-|2 ? 2| is pure because it is equal to |2| (using the axioms given below), but |(\y ->1?y)2| and |1 ? 2| are impure.
-In what follows we use lowercase letters for pure expressions and uppercase letters for possibly impure expressions. 
+Because purity is a normal predicate, it is closed under equality, i.e., an expression is 
+also pure if it is equal to a pure expression. For example, |2| and |E1 + E2| for pure |E1| 
+and |E2| are pure because |2| and |+| are constants. Also |\y ->1?y| is pure because it is 
+a lambda abstraction, and |(\x -> \y -> x?y)1| is pure because it is equal by |beta|-reduction
+(see below) to the former. Furthermore, |2 ? 2| is pure because it is equal to |2| (using the 
+axioms given below), but |(\y ->1?y)2| and |1 ? 2| are both impure. In what follows we use 
+lowercase letters for pure expressions and uppercase letters for possibly impure expressions. 
 %%FR end
 
 %format vee = "\mathbin{\,\vee\,}"
@@ -450,7 +451,9 @@ first two axioms, the rules of |beta| and |eta| conversion. The |beta| rule is t
 \end{eqnarray}
 where |E(x:=e)| denotes the expression |E| with all free occurrences of |x| replaced by |e|.
 %% FR
-Intuitively, the purity restriction to |beta|-reduction makes sense because the bound variable of the lambda abstraction only ranges over values and therefore may only be substituted with pure expressions.
+Intuitively, the purity restriction to |beta|-reduction makes sense because the bound variable 
+of the lambda abstraction only ranges over values and therefore may only be substituted with 
+pure expressions.
 %%In particular, since variables are pure we have |E = (\x -> E) x|.
 
 The |eta| rule asserts that if |f| is a pure function, then
@@ -459,19 +462,24 @@ The |eta| rule asserts that if |f| is a pure function, then
 |f|          &=& |\x -> f x|
 \end{eqnarray}
 %%FR
-The purity restriction to |eta|-expansion makes sense because lambda-abstractions are always pure and thus can never equal an impure function.
+The purity restriction to |eta|-expansion makes sense because lambda-abstractions are 
+always pure and thus can never equal an impure function.
 
 %%FR start
 \def\rul#1#2{\frac{#1}{#2}}
 \def\tb{\;\;\;\;}
 \def\vd{\;\vdash\;}
 
-Our notion of purity corresponds to the \emph{proper} expressions of \cite{m&b} except that we avoid the axiom that variables are pure.
-Our first draft used that axiom, but we were unable to formalize the calculus until we modified that aspect.
-The reason why that axiom is problematic is that it forces a distinction between meta-variables (which may be impure) and object variables (which must be pure).
-That precludes using higher-order abstract syntax when representing and reasoning about the language, e.g., in a logical framework like \cite{lf}, and highly complicates the substitution properties of the language.
-However, just like in \cite{m&b}, our binders will range only over values, which our calculus captures by adding a purity assumption for the bound variable whenever traversing into the body of a binder.
-For example, the $\xi$ rule for equality reasoning under a lambda becomes:
+Our notion of purity corresponds to the \emph{proper} expressions of \cite{m&b} except that 
+we avoid the axiom that variables are pure. Our first draft used that axiom, but we were unable 
+to formalise the calculus until we modified that aspect. The reason why the axiom is problematic 
+is that it forces a distinction between meta-variables (which may be impure) and object variables
+(which must be pure). That precludes using higher-order abstract syntax when representing and 
+reasoning about the language, e.g., in a logical framework like \cite{lf}, and highly complicates 
+the substitution properties of the language.
+However, just like in \cite{m&b}, our binders will range only over values, which our calculus 
+captures by adding a purity assumption for the bound variable whenever traversing into the body 
+of a binder. For example, the $\xi$ rule for equality reasoning under a lambda becomes:
 \[\rul{\pure{x}\vd E=F}{\vd \lambda x . E = \lambda x .F}\]
 %%FR end
 
@@ -490,12 +498,12 @@ with the remaining four axioms, which are as follows:
 \label{lambda}
    |f <~ \x -> E| &|<==>|& |forall x . f x <~ E|
 \end{eqnarray} 
-Recall that free lower case variables range over pure expressions only, i.e., the free variables |x| and |f| are assumed pure.
+Recall that free lower case variables range over pure expressions only, i.e., the free 
+variables |x| and |f| are assumed pure.
 
-From (\ref{refines}) and (\ref{equality})
-we obtain that |(<~)| is reflexive, transitive and anti-symmetric. From 
-(\ref{choice}) we obtain that |(?)| is associative, commutative and idempotent. 
-Axioms (\ref{choice}) and (\ref{apply}) are sufficient to establish
+From (\ref{refines}) and (\ref{equality}) we obtain that |(<~)| is reflexive, transitive 
+and anti-symmetric. From (\ref{choice}) we obtain that |(?)| is associative, commutative 
+and idempotent. Axioms (\ref{choice}) and (\ref{apply}) are sufficient to establish
 \begin{eqnarray}
 \label{distrib}
     |F ( choose [E1,E2,...,E_n]) =  choose [F E1,F E2,...,F E_n]|
@@ -552,10 +560,11 @@ Finally, (\ref{apply}) gives us that
 where |(.) = (\f -> \g -> \x -> f (g x))|.
 
 %%FR start
-To finish the presentation of the calculus, we have to give the rules for the logical operators, which we used in the axioms.
-The rule for the propositional connectives are the standard ones, and we omit them.
-But the rules for the quantifies are subtle because we have to ensure the quantifiers range over pure expressions only.
-In single-conclusion natural deduction style, these are
+To complete the presentation of the calculus, we need to give the rules for the logical 
+operators used in the axioms. The rule for the propositional connectives are the standard ones
+and are omitted. But the rules for the quantifies are subtle because we have to ensure the 
+quantifiers range over pure expressions only. In single-conclusion natural deduction style, 
+these are
 \[\Large\begin{array}{ccc}
 \rul{\pure{x} \vd F}{\vd \forall x : F} & \tb\tb &
 \rul{\vd \forall x : F \tb \vd \pure{e}}{\vd F(x:=e)} \\[.2cm]
@@ -592,8 +601,10 @@ Here $\pure{e}$ is the purity predicate, whose axioms are described above.
 %format myexists = "\exists"
 %format myforall = "\forall"
 
-To establish the consistency of the axiomatisation we give a denotational semantics for nondeterministic expressions.
-As the target language of our semantics, we use standard set theory, with the notations $A\to B$ and $\lambda x\in A.b$ for functions (with $\in A$ omitted if clear).
+To establish the consistency of the axiomatisation we give a denotational semantics for
+nondeterministic expressions. As the target language of our semantics, we use standard set 
+theory, with the notations $A\to B$ and $\lambda x\in A.b$ for functions (with $\in A$ omitted 
+if clear).
 
 \paragraph{Overview}
 The basic intuition of the interpretation function $\sem{-}$ is given in the following table where we write |PP A| for the set of non-empty subsets of |A|:
@@ -620,13 +631,16 @@ Functions are set-valued, and choice is simply union.
 Additionally, for each type $T$, we will define the operation
 \[\sem{T}\ni v\mapsto\rc{v}\in\PP\sem{T},\]
 which embeds the single (deterministic) values into the power set.
-We call it \emph{refinement closure} because $\rc{v}$ is the set of all values that we want to allow as a refinement of $v$.
-This allows defining the refinement ordering $\leq_T$ on $\sem{T}$ by $v\leq _T w$ iff $\rc{v}\sse \rc{w}$.
+We call it \emph{refinement closure} because $\rc{v}$ is the set of all values that we 
+want to allow as a refinement of $v$.
+This allows defining the refinement ordering $\leq_T$ on $\sem{T}$ by $v\leq _T w$ iff 
+$\rc{v}\sse \rc{w}$.
 For every expression $E:T$, the set $\sem{E}$ will be downward closed with respect to $\leq_T$.
 One could add an expression |bottom| as a value with no refinements other than itself, which
-denotes the empty set. But doing so would mean that |bottom| would be a refinement of every expression, which 
-we choose not to have. That explains the restriction to non-empty sets in our semantics.
-Note that $\leq_T$ is not the same as the usual approximation ordering on Haskell expressions of a given type with |bottom| as the least element.
+denotes the empty set. But doing so would mean that |bottom| would be a refinement of every 
+expression, which we choose not to have. That explains the restriction to non-empty sets in 
+our semantics. Note that $\leq_T$ is not the same as the usual approximation ordering on 
+Haskell expressions of a given type with |bottom| as the least element.
 
 %%An expression |E| of type |T|
 %%is interpreted as an \emph{upclosed} subset of a semantic type |lb T rb|.
@@ -639,14 +653,13 @@ Note that $\leq_T$ is not the same as the usual approximation ordering on Haskel
 \paragraph{Choice and Refinement}
 We define 
 \[\semr{\sqcap/[E_1,...,E_n]} = \semr{E_1}\cup\ldots\cup\semr{E_n}\]
-This corresponds to our intuition that a choice refines to any of its arguments, i.e., it denotes all values denoted by any argument.
-
-This is tied to the intuition that the refinement property is corresponds to the subset condition on denotations.
+This captures our intuition that a choice refines to any of its arguments, i.e., 
+it denotes all values denoted by any argument. This is tied to the intuition that the 
+refinement property corresponds to the subset condition on denotations.
 For example, |E1 <~ E1 ? E2| corresponds to $\semr{E_1}\sse\semr{E_1\sqcap E_2}$.
 
-Pure expressions $e:T$ cannot be properly refined anymore.
-Therefore, they are intuitively interpreted as singleton sets.
-Technically, we will have $\semr{e}=\rc{v}$ for some $v\in\sem{T}$.
+Pure expressions $e:T$ cannot be properly refined. Therefore, they are intuitively 
+interpreted as singleton sets. Technically, we have $\semr{e}=\rc{v}$ for some $v\in\sem{T}$.
 
 \paragraph{Variables}
 As usual, expressions with free variables are interpreted relative to an environment $\rho$.
@@ -664,11 +677,12 @@ Moreover, we define $\rc{v}=\{v\}$ for $v\in \sem{B}$ for every base type $B$.
 In particular, we have $v\leq_B w$ iff $v = w$. In other words, the refinement ordering
 on base types is \emph{flat}.
 
-We would like to interpret all constants |C| in this straightforward way as well, but that is not as easy.
-In general, we assume that for every user-declared constant $C:T$, a denotation $\ov{C}\in\sem{T}$ is provided.
-Then we define \[\semr{C}=\rc{\ov{C}}.\]
-
-However, we cannot simply assume that $\ov{C}$ is the standard denotation that we would use to interpret a deterministic type theory.
+We would like to interpret all constants |C| in this straightforward way as well, but that 
+is not as easy. In general, we assume that for every user-declared constant $C:T$, a denotation 
+$\ov{C}\in\sem{T}$ is provided. Then we define 
+\[\semr{C}=\rc{\ov{C}}.\]
+However, we cannot simply assume that $\ov{C}$ is the standard denotation that we would use 
+to interpret a deterministic type theory.
 For example, for |+:Int -> Int -> Int|, we cannot define $\ov{+}$ as the usual addition $+_\ZZ:\ZZ\to\ZZ\to\ZZ$ because we need a value $\ov{+}:\ZZ\to\PP(\ZZ\to\PP\ZZ)$.
 
 For first-order constants, i.e., constants $C:B_1\to \ldots\to B_n\to B$ where $B$ and all $B_i$ are base types (e.g., the constant $+$), we can still lift the standard interpretation relatively easily:
@@ -875,8 +889,9 @@ The corollary above is now proved by reasoning
          \seme{E}{\rho(x:= \lambda v.\seme{F}{\rho(y:= v)})}
 \end{array}\]
 It remains to show that the latter is equal to $\semr{E(x:= \lambda y.F)}$.
-Here we proceed by structural induction on |E|.
-We omit the details.
+Here we proceed by structural induction on |E|. We omit the details. The other axioms are proved by similar reasoning.
+\end{proof}
+
 
 %% FR these are two cases for the above structural induction
 %%Here are two cases:
@@ -906,8 +921,6 @@ We omit the details.
 %%         lb \z->E rb(rho(x:= \w-> lb F rb)(rho(y:=w)))     
 %%\end{spec}
 
-The other axioms are proved by similar reasoning.
-\end{proof}
 
 As a straightforward consequence of soundness, we have
 \begin{theorem}[Consistency]
