@@ -431,12 +431,13 @@ We add rules such that $\pure{E}$ holds if |E| is
 there are no arguments),
 \item a lambda abstraction (independent of whether its body is pure).
 \end{itemize} 
-Because purity is a normal predicate, it is closed under equality, i.e., an expression is 
+Like any predicate symbol, purity is closed under equality, i.e., an expression is 
 also pure if it is equal to a pure expression. For example, |2| and |E1 + E2| for pure |E1| 
 and |E2| are pure because |2| and |+| are constants. Also |\y ->1?y| is pure because it is 
 a lambda abstraction, and |(\x -> \y -> x?y)1| is pure because it is equal by |beta|-reduction
 (see below) to the former. Furthermore, |2 ? 2| is pure because it is equal to |2| (using the 
-axioms given below), but |(\y ->1?y)2| and |1 ? 2| are both impure. In what follows we use 
+axioms given below), but |(\y ->1?y)2| and |1 ? 2| are both impure.
+In what follows we use 
 lowercase letters for pure expressions and uppercase letters for possibly impure expressions. 
 %%FR end
 
@@ -693,8 +694,9 @@ by
 Because all $B_i$ are base types, this yields we have $\semr{C}=\rc{\overline{C}}=\{\overline{C}\}$.
 For $n=0$, this includes constants $C:B$, e.g., $\semr{1}=\{1\}$ and accordingly for all integer literals.
 
-But we cannot lift standard interpretations of higher-order constants $C$ accordingly.
-For those, we must provide $\ov{C}$ explicitly.
+But we cannot systematically lift standard interpretations of higher-order constants $C$ accordingly.
+Instead, we must provide $\ov{C}$ individually for each higher-order constant.
+But for the purposes of program calculation, this is acceptable because we only have to do it once for the primitive constants of the language.
 In \cite{m&b}, this subtlety is handled by restricting attention to first-order constants.
 %% This restriction is hidden in the phrase "every operator symbol f of the base types" on page 20 of \cite{m&b}
 
