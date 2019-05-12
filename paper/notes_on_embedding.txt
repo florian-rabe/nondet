@@ -1,9 +1,15 @@
 Let <x> and [x] be the interpretation functions of deterministic resp. non-deterministic lambda calculus.
 We want to define an embedding e_T: <T> -> [T] for every type T.
+Such an embedding would allow lifting the intended interpretations of constants from standard lambda-calculus to the non-deterministic one.
 
 For base types B, <B> = [B] and e_B = \x.x.
 
-For function types S -> T, we have f and need f' := e_{S->T}(f) such that
+For first-order base types T=B_1->...->B_n->B, the embedding is not trivial but still easy:
+e_T(f) = \x_1.{\x_2.{..\x_n.{f x_1 x_2 ... x_n}...}}
+But for higher-order function types, it is tricky.
+
+In general, we would have to define e_{S->T} inductively, assuming we already have embedding e_S and e_T.
+So assuming f:<S -> T>, we have to define f' := e_{S->T}(f) of type [S->T] = [S]->P[T].
 
      f
 <S> ---> <T>
@@ -14,7 +20,7 @@ For function types S -> T, we have f and need f' := e_{S->T}(f) such that
  v   f'   v
 [S] ---> P[T]
 
-where l_T is the refinement closure.
+Here l_T is the refinement closure, which straightforwardly embeds values into sets of values (written x^{\leftarrow} in the paper).
 
 We could try
 f'(s) \bigcup { l_T( e_T(f(x)) ) | e_S(x) = s}
@@ -26,15 +32,18 @@ f'(s) \bigcup { l_T( e_T(f(x)) ) | e_S(x) \leq_S s}
 where \leq_S is the refinement ordering.
 But it's also not clear if that is sufficient.
 
-Moreover, there is a problem with calling f(x) if S is a function type.
-In that case, we only pass single deterministic functions x into f.
-That produces too small a result set if f uses its argument more than once, if f is the map function.
+In general, there is a subtle problem with calling f if S=A->B is a function type.
+In that, when defining e_{S->T}(s), s is a non-deterministic function.
+But we can only pass deterministic functions into f.
+Even if we apply f to all deterministic functions that refine s and take the union of the results (which is essentially what the above definition does), we get a set that is too small.
+The problem arises if f calls its argument multiple times.
 
-For example, consider
-f = \g: Int->Int. g 1 + g 2
-e = \x:Int. x ? -x
-We have f e = -3 ? -1 ? 1 ? -3
+For example, consider a constant C:(Int->Int)->Int with a deterministic denotation F = \g: Z->Z. g(1)+g(2).
+We want to lift that denotation to the non-deterministic case, i.e., we need F' : (Z -> P(Z)) -> P(Z).
+Let u = \v:Z.{v,-v}.
+We want to have F'(u) = {-3,-1,1,3}.
 
-But e_{S->T}(<f>) != [f]
-because evaluating e_{S->T}(<f>)([e]) calls <f> only on any function g such that g(x)\in \{x,-x\}.
-What we want is to choose differently for each occurrence of g.
+Giving F' for an individual F is easy.
+But I don't see know how to do it systematically, to have F'=L(F) for a deterministic L.
+The problem is that F calls g twice, and u can return a different result every time it's called.
+We can't mimic that effect with deterministic functions and L and F.
