@@ -64,12 +64,12 @@ theory Syntax =
   ### Refinement Rules❙
 
   /T A λ-abstraction refines to a function if its body refines for all arguments.❙
-  refine_lambda: {A,B,F:tm A ⟶ tm B, f} ({x} f@x ← (F x)) ⟶ f ← λ[x] F x❙
-  // The paper has the condition in both directions. The other direction follows using refine_apply.❙
+  refine_lambda: {A,B,F:tm A ⟶ tm B, f} ({x} pure x ⟶ f@x ← (F x)) ⟶ f ← λ[x] F x❙
+  // The paper has the condition in both directions. The other direction is provable using refine_apply.❙
   
   /T Application is monotone with respect to refinement.❙
   refine_apply : {A,B, f,g: tm A -< B, x,y:tm A} f ← g ⟶ x ← y ⟶ (f@x) ← (g@y)❙
-  // The paper has the equivalent condition x ← F E iff exist f,e such that f ← F, e ← E, x ← f e.❙
+  // The paper has the related condition x ← F E for pure x iff exist pure f,e such that f ← F, e ← E, x ← f e.❙
   
   ### Purity Rules❙
 
@@ -120,21 +120,19 @@ theory Syntax =
 
   ### Refinement Rules❙
 
-  /T A non-deterministic term refines into any of its options and is a least upper bound in that sense.❙
+  /T A non-deterministic term refines into any of its options.❙
   
-  refine_nd_left  : {A,x,y:tm A} x ← x⊓y❙ 
-  refine_nd_right : {A,x,y:tm A} y ← x⊓y❙
-  refine_nd_lub   : {A,x,y,u:tm A} x ← u ⟶ y ← u ⟶ x⊓y ← u❙
-
-  /T Function application distributes over choice.❙
-  refine_nd_apply : {A,B,f:tm A -< B, x,y} f@(x⊓y) == (f@x)⊓(f@y)❙
+  refine_nd_I_left  : {A,x,y:tm A} x ← x⊓y❙ 
+  refine_nd_I_right : {A,x,y:tm A} y ← x⊓y❙
+  refine_nd_E       : {A,x,y,u:tm A, C} pure u ⟶ u ← x⊓y ⟶ (u ← x ⟶ ⊦C) ⟶ (u ← y ⟶ ⊦C) ⟶ ⊦C❙
 
   // The paper uses ⊓/L for non-empty lists of arguments, which is equivalent to binary ⊓.
      The paper uses the condition v ← ⊓/L iff v ← x for some x in L.
-     The right-to-left direction of that condition is equivalent the rules above.
-     The left-to-right direction does not hold if v can be arbitrary: 1⊓3 ← (1⊓2)⊓(3⊓4) but neither 1⊓3←1⊓2 nor 1⊓3←3⊓4. It hold only if quantifiers range only over pure expressions, which is mentioned but not spelt out in the paper.
-     Using the condition from the paper, refine_nd_apply is provable.❙
+     That is equivalent to the rules above.❙
   
+  /T Function application distributes over choice (provable from the above).❙
+  refine_nd_apply : {A,B,f:tm A -< B, x,y} f@(x⊓y) == (f@x)⊓(f@y)❙
+
   ### Purity Rules❙
 
   /T There are no rules because non-deterministic terms are not pure.❙
