@@ -67,44 +67,52 @@ nonempty list of candidates. We will suppose that the construction uses |foldr|:
     candidates xs  =  foldr step [c0] xs
                       where step x cs  =  concatMap (additions x) cs
 \end{spec}
-The useful function |concatMap| is defined by |concatMap f = concat . map f|.
-The value |c0| is some initial candidate and |additions x c| is a finite, nonempty list 
-of extended candidates constructed from a new item |x| and an existing candidate |c|.
-Think of the computation as a finite tree with |c0| as root and |additions x c|
-as the children of the tree with label |c|. The list of final candidates
-appears as the fringe of the tree.
-
+The value |c0| is some default candidate for an empty list of items. The function |concatMap| 
+is defined by 
+\begin{spec}
+    concatMap f = concat . map f
+\end{spec}
+and |additions :: Item -> Candidate -> [Candidate]| takes a new item and a candidate and 
+constructs a nonempty list of extended candidates.
+For example, if the candidates were the permutations of a list, then |c0| would be the empty list 
+and |additions x| would be a list of all the ways |x| can be inserted into a given permutation.
+For example,
+\begin{spec}
+    additions 1 [2,4,3] = [[1,2,4,3],[2,1,4,3],[2,4,1,3],[2,4,3,1]]
+\end{spec}
 A greedy algorithm for |mcc| arises as the result of successfully fusing the function
 |minWith cost| with |candidates|. Operationally speaking, instead of 
 building the complete list of candidates and then selecting a best one, we 
 construct a single best candidate at each step. The usual formulation of the 
 fusion rule for |foldr| states that
 \begin{spec}
-    f (foldr g e xs) = foldr h (f e) xs
+    foldr f (h e) xs = h (foldr g e xs)
 \end{spec}
 for all finite lists |xs| provided the fusion condition 
 \begin{spec}
-    f (g x y) = h x (f y)
+    h (g x y) = f x (h y)
 \end{spec}
 holds for all |x| and |y|. In fact the fusion condition is required to hold only for
 all |y| of the form |y = foldr g e xs|; this version is called \emph{context-sensitive}
 fusion.
 
-The context-sensitive fusion condition for our problem reads:
+For our problem, |h = minWith cost| and |g = step| but |f| is unknown. Abbreviating
+|candidates xs| to |cs|, the context-sensitive fusion condition reads
 \begin{spec}
-    minWith cost . step x . candidates = add x . minWith cost . candidates
+    minWith cost (step x cs) = add x (minWith cost cs)
 \end{spec}
-for some function |add| and all finite lists. To see if it holds we can reason:
+for some function |add|. To see if it holds, and to discover |add| in the process, 
+we can reason:
 \begin{spec}
-   ^^  minWith cost . step x . candidates
+   ^^  minWith cost (step x cs)
 =        {- definition of |step| -}
-       minWith cost . concatMap (additions x) . candidates
+       minWith cost (concatMap (additions x) cs)
 =        {- distributive law (see below) -}
-       minWith cost . map (minWith cost . additions x) . candidates
+       minWith cost (map (minWith cost . additions x) cs)
 =        {- define |add x = minWith cost . additions x| -}
-       minWith cost . map (add x) . candidates
+       minWith cost (map (add x) cs)
 =        {- greedy condition (see below) -}
-       add x . minWith cost . candidates
+       add x (minWith cost cs)
 \end{spec}
 The distributive law used in the second step is the fact that
 \begin{spec}
@@ -115,39 +123,43 @@ provided |xss| is a finite list of finite, nonempty lists. Equivalently,
     minWith f (concatMap g xs) = minWith f (map (minWith f . g) xs)
 \end{spec}
 provided |xs| is a finite list and |g| returns finite, nonempty lists. The proof 
-of the distributivity law is straightforward using the given definition of |minWith|. 
+of the distributivity law is straightforward but we omit details.
+
 Summarising this short calculation, we have shown that
 \begin{spec}
-    mcc    =  foldr add c0
-              where  add x  =  minWith cost . additions x
+    mcc    =  foldr add c0  ^  where  add x  =  minWith cost . additions x
 \end{spec}
-provided the following \emph{greedy condition} holds:
+provided the following \emph{greedy condition} holds for all |x| and |xs|:
 \begin{spec}
-    minWith cost . map (add x) . candidates = add x . minWith cost . candidates
+    minWith cost (map (add x) cs) = add x (minWith cost cs)
 \end{spec}
+where |cs = candidates xs|.
+
 That all seems simple enough. However, the fly in the ointment is that, in order to 
-establish the greedy condition, we need to prove the very strong fact that
+establish the greedy condition when there may be more than one candidate in |cs| with 
+minimum cost, we need to prove the very strong fact that
 \begin{equation}
 \label{strong}
-|cost c1 <= cost c2  ^  <==>  ^  cost (add x c1) <= cost (add x c2)|
+|cost c <= cost c'  ^  <==>  ^  cost (add x c) <= cost (add x c')|
 \end{equation}
-for all candidates |c1| and |c2|. To see why, observe that if |c1| is the 
-first candidate with minimum cost in a list of candidates, then |add x c1| has to be the first 
+for all candidates |c| and |c'| in |cs|. To see why, observe that if |c| is the 
+first candidate with minimum cost in a list of candidates, then |add x c| has to be the first 
 candidate with minimum cost in the list of extended candidates. This follows from our definition 
 of |minWith| which selects the first element with minimum cost in a list of candidates. To ensure 
-that the extension of a candidate |c2| earlier in the list has a larger cost we have to show that
+that the extension of a candidate |c'| earlier in the list has a larger cost we have to show that
 \begin{equation}
 \label{mono1}
-|cost c2 > cost c1  ^  ==>  ^  cost (add x c2) > cost (add x c1)|
+|cost c' > cost c  ^  ==>  ^  cost (add x c') > cost (add x c)|
 \end{equation}
-for all |c1| and |c2|. To ensure that the extension of a candidate |c2| later in the list does
-not have a smaller cost we have to show that 
+for all |c| and |c'| in |cs|. To ensure that the extension of a candidate |c'| later in the list 
+does not have a smaller cost we have to show that 
 \begin{equation}
 \label{mono2}
-|cost c1 <= cost c2  ^  ==>  ^  cost (add x c1) <= cost (add x c2)|
+|cost c <= cost c'  ^  ==>  ^  cost (add x c) <= cost (add x c')|
 \end{equation}
-for all |c1| and |c2|. The conjunction of (\ref{mono1}) and (\ref{mono2}) is (\ref{strong}).
-The problem is that (\ref{strong}) is so strong that it rarely holds in practice. A similar 
+for all |c| and |c'| in |cs|. The conjunction of (\ref{mono1}) and (\ref{mono2}) is 
+(\ref{strong}). The problem is that (\ref{strong}) is so strong that it rarely holds in 
+practice. As evidence for this assertion, the appendix briefly discusses one example. A similar 
 condition is needed if, say, |minWith| returned the last element in a list with minimum cost, 
 so the problem is not to do with the specific definition of |minWith|. What we really need 
 is a form of reasoning that allows us to establish the necessary fusion condition from the 
@@ -231,69 +243,67 @@ x <~ M (concat xss)             ^  ==>  ^  (exists xs . xs <~ map M xss && x <~ 
 \end{spec}
 It is easy enough to show that these two assertions do hold though we omit details.
 
-For the second example, consider the function |double x = x + x| over the integers. Does
-the equation
+For the remaining two examples, define
 \begin{spec}
-    double (M xs) = M xs + M xs
+   Choose x y = MinWith (const 0) [x,y]
 \end{spec}
-hold, where |xs| is a finite nonempty list of integers and |M = MinWith (const 0)|? We have
+so |x <~ Choose x y| and |y <~ Choose x y|. Do we have
 \begin{spec}
-  ^^  x <~ double (M [1,2])
-<==>  exists y . y <~ M [1,2] && x = double y
+    double (Choose 1 2) = Choose 1 2 + Choose 1 2
+\end{spec}
+where |double x = x + x|? The answer is no, because
+\begin{spec}
+  ^^  x <~ double (Choose 1 2)
+<==>  exists y . y <~ Choose 1 2  && x = double y
 <==>  x = 2 || x = 4
 \end{spec}
 while
 \begin{spec}
-  ^^  x <~ M [1,2] + M [1,2]
-<==>  exists y,z . y <~ M [1,2] && z <~ M [1,2] && x = y + z
+  ^^  x <~ Choose 1 2 + Choose 1 2
+<==>  exists y,z . y <~ Choose 1 2 && z <~ Choose 1 2 && x = y + z
 <==>  x = 2 || x = 3 || x == 4
 \end{spec}
-so the answer is no. We have only that |double (M xs) <~ M xs + M xs|.
+We have only that |double (Choose x y) <~ Choose x y + Choose x y|.
 
-For the third example, again let |M = MinWith (const 0)|. It is easy enough to show,
-for all |f1|, |f2| and |x| that
+For the third example, it is easy enough to show, for all |f1|, |f2| and |x| that
 \begin{spec}
-    M [f1 x, f2 x] = M [f1,f2] x
+    Choose (f1 x) (f2 x) = Choose f1 f2 x
 \end{spec}
 but it would be wrong to conclude by |eta| conversion that
 \begin{spec}
-    \x-> M[f1 x, f2 x] = M [f1,f2]
+    \x-> Choose (f1 x) (f2 x) = Choose f1 f2
 \end{spec}
 We have 
 \begin{spec}
-    f <~ \x-> M[f1 x, f2 x] <==> forall x : f x = f1 x || f x = f2 x
+    f <~ \x-> Choose (f1 x) (f2 x)  <==> forall x : f x = f1 x || f x = f2 x
 \end{spec}
 However, 
 \begin{spec}
-    f <~ M [f1,f2] <==> (forall x : f x = f1 x) || (forall x: f x = f2 x)
+    f <~ Choose f1 f2 <==> (forall x : f x = f1 x) || (forall x: f x = f2 x)
 \end{spec}    
 The results are different. The |eta| rule, namely |f = \x-> f x|,
-does not hold if |f| is a nondeterministic function such as |M [f1,f2]|. 
+does not hold if |f| is a nondeterministic function such as |Choose f1 f2|. 
 
 What else do we want? Certainly, we want a refinement version of the fusion law
 for |foldr|, namely that over finite lists we have
 \begin{spec}
-foldr g e' xs <~ H (foldr f e xs)
+foldr f e' xs <~ H (foldr g e xs)
 \end{spec}
-for all finite lists |xs| provided that |e' <~ H e| and |g x (H y) <~ H (f x y)|.
-The context-sensitive version of the second condition reads:
-\begin{spec}
-    g x (H (foldr f e xs)) <~ H (f x (foldr f e xs))
-\end{spec}
+for all finite lists |xs| provided that |e' <~ H e| and |f x (H y) <~ H (g x y)|.
 Here is the proof of the fusion law. The base case is immediate and the 
 induction step is as follows:
 \begin{spec}
-  ^^  foldr g e' (x:xs)
+  ^^  foldr f e' (x:xs)
 =       {- definition of |foldr| -}
-      g x (foldr g e' xs)
+      f x (foldr f e' xs)
 <~      {- induction, and monotonicity of refinement (see below) -}
-      g x (H (foldr f e xs))
+      f x (H (foldr g e xs))
 <~      {- fusion condition, and monotonicity of refinement -}
-      H (f x (foldr f e xs))
+      H (g x (foldr g e xs))
 =       {- definition of |foldr| -}
-      H (foldr f e (x:xs))
+      H (foldr g e (x:xs))
 \end{spec}
-The appeal to the monotonicity of refinement is assertion
+The appeal to the monotonicity of refinement is the assertion
 \begin{spec}
 E1 <~ E2  ^  ==>  ^  F E1 <~ F E2
 \end{spec}
@@ -304,17 +314,17 @@ algorithm for |mcc|. This time we start with the specification
 \begin{spec}
 mcc <~ MinWith cost . candidates
 \end{spec}
-For the context-sensitive fusion condition we reason:
+For the fusion condition we reason:
 \begin{spec}
-  ^^  MinWith cost . step x . candidates
+  ^^  MinWith cost (step x cs)
 =       {- definition of |step| -}
-      MinWith cost . concatMap ( additions x) . candidates
+      MinWith cost (concatMap (additions x) cs)
 =       {- distributive law -}
-      MinWith cost . map (MinWith cost .  additions x) . candidates
+      MinWith cost (map (MinWith cost .  additions x) cs)
 ~>      {- suppose |add x <~ MinWith cost .  additions x| -}
-      MinWith cost . map (add x). candidates
+      MinWith cost (map (add x) cs)
 ~>      {- greedy condition (see below) -}
-      add x . MinWith cost . candidates
+      add x (MinWith cost cs)
 \end{spec}
 We write |E1 ~> E2| as an alternative to |E2 <~ E1|.
 The second step makes use of the distributive law, and the third step
@@ -322,24 +332,23 @@ is an instance of the monotonicity of refinement.
 
 Let us now revisit the greedy condition. This time we only have to show
 \begin{spec}
-    add x . MinWith cost . candidates <~ MinWith cost . map (add x) . candidates
+    add x (MinWith cost cs) <~ MinWith cost (map (add x) cs)
 \end{spec}
 where |add x <~ MinWith cost .  additions x|.
 Unlike the previous version, this claim follows from the monotonicity 
-condition (\ref{mono2}). To spell out the details, let |cs = candidates xs|
-and suppose |c1| is a candidate in |cs| with minimum cost. We have only
-to show that 
+condition (\ref{mono2}). To spell out the details, suppose |c| is a candidate in 
+|cs| with minimum cost. We have only to show that 
 \begin{spec}
-    add x c1 <~ MinWith cost (map (add x) cs
+    add x c <~ MinWith cost (map (add x) cs)
 \end{spec}
 Equivalently, that
 \begin{spec}
-    cost (add x c1) <= cost (add x c2)
+    cost (add x c) <= cost (add x c')
 \end{spec}    
-for all candidates |c2 `elem` cs|. But this follows from (\ref{mono2}) and 
-the fact that |cost c1 <= cost c2|.
+for all candidates |c'| on |cs|. But this follows from (\ref{mono2}) and 
+the fact that |cost c <= cost c'|.
 
-Summarising, we have shown that |mcc =foldr add  c0| provided (\ref{mono2}) holds
+Summarising, we can now define |mcc =foldr add c0| provided (\ref{mono2}) holds
 for a suitable refinement of |add|. Unlike the previous calculation, the new one
 is sufficient to deal with most examples of greedy algorithms, at least when
 candidate generation is expressed in terms of |foldr|.
@@ -485,7 +494,7 @@ of a binder. For example, the $\xi$ rule for equality reasoning under a lambda b
 %%FR end
 
 As we will see below, without the above purity restrictions we could derive a contradiction 
-with the remaining four axioms, which are as follows:
+with the remaining five axioms, which are as follows:
 \begin{eqnarray}
 \label{refines}
    |E1 <~ E2|     &|<==>|& |forall x . x <~ E1 ==> x <~ E2|\\
@@ -819,7 +828,7 @@ The clause for application captures our intuition of monotonicity of refinement:
 \paragraph{Formulas}
 Because formulas are a special case of expressions, they are interpreted as non-empty subsets of $\sem{Bool}=\{0,1\}$.
 We write $\top$ for the truth value $\{1\}$ denoting truth.
-The truth value $\{0,1\}$ will never occur (unless the user willfully interprets a constant in a way that returns it).
+The truth value $\{0,1\}$ will never occur (unless the user wilfully interprets a constant in a way that returns it).
 
 The denotation of all Boolean constants and expressions is as usual.
 The denotation of the quantifiers and the special predicates is defined by:
@@ -945,11 +954,11 @@ material as accessible as possible, we wanted to stay close to Haskell and that 
 we did not want to make the move from functions to relations, as proposed for instance in \cite{bird&demoor}.
 Instead, we made use of just two nondeterministic functions, |MinWith| and |ThinBy| (or
 three if you count |MaxWith|), and reasoned about refinement rather than equality when the
-need arose. The legitimacy of the calculus, as propounded above, was omitted. The problems
-associated with reasoning about nondeterminism were discussed at the Glasgow meeting of WG2.1 
-in 2016, when the second author came on board. Our aim has been to write a short and hopefully
-sufficient introduction to the subject of nondeterminism for functional programmers rather than logicians. In this enterprise we made much use of the very readable papers by Joe Morris and 
-Alexander Bunkenberg. 
+need arose. The legitimacy of the calculus, as propounded above, is not given in the book. 
+The problems associated with reasoning about nondeterminism were discussed at the Glasgow 
+meeting of WG2.1 in 2016, when the second author came on board. Our aim has been to write a 
+short and hopefully sufficient introduction to the subject of nondeterminism for functional programmers rather than logicians. In this enterprise we made much use of the very readable 
+papers by Joe Morris and Alexander Bunkenberg. 
 
 \begin{thebibliography}{99}
 
@@ -985,6 +994,54 @@ Joseph M. Morris and Malcolm Tyrrell.
 
 \end{thebibliography}
 
+\section*{Appendix}
+
+%format q2
+
+Here is the example, known as the \emph{paragraph} problem. Consider the task of dividing 
+a list of words into a list of lines so that each line is subject to a maximum line width 
+of |w|. Each line is a list of words and its width is the sum of the length of the words 
+plus the number of inter-word spaces. There is an obvious greedy algorithm for this problem, 
+namely to add the next word to the current line if it will fit, otherwise to start a newline 
+with the word. For what cost function does the greedy algorithm produce a division with 
+minimum cost?
+
+The obvious answer is that such a division has the minimum possible number of lines.
+So it has, but we cannot calculate this algorithm from a specification involving
+|minWith length|. To see why, consider  a list of words whose lengths are |[3,6,1,8,1,8]| 
+(the words are not important, only their lengths matter). Taking |w=12|, there are four 
+shortest possible layouts, of which two are
+\begin{spec}
+   p1 = [[3,6,1],[8],[1,8]]
+   p2 = [[3,6],[1,8,1],[8]]
+\end{spec}
+Let |add x p| be the function that adds the next word |x| to the end of the last line if
+the result will still fit into a width of |12|, or else begins a new line. In particular
+\begin{spec}
+   q1  =  add 2 p1 =  [[3,6,1],[8],[1,8],[2]]
+   q2  =  add 2 p2 =  [[3,6],[1,8,1],[8,2]]
+\end{spec}
+We have
+\begin{spec}
+   length p1 <= length p2 && length q1 > length q2
+\end{spec}
+so the monotonicity condition fails. The situation can be redeemed by strengthening the
+cost function to read
+\begin{spec}
+   cost p = (length p, width (last p))
+\end{spec}
+In words one paragraph costs less than another if its length is shorter, or if the lengths 
+are equal and the width of the last line is shorter. Minimising |cost| will also minimise 
+|length|. This time we do have
+\begin{spec}
+   cost p <= cost p' ==> cost (add x p) <= cost (add x p')
+\end{spec}
+as can be checked by considering the various cases, so the monotonicity condition holds. 
+However, we also have
+\begin{spec}
+    cost (add 5 p1) = cost (add 5 p2) = (4,5)
+\end{spec}
+and |cost p2 < cost p1|, so the strong monotonicity condition (\ref{strong}) fails.
 
 
 
