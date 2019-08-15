@@ -1,0 +1,1905 @@
+\documentclass{llncs}
+\usepackage{amssymb}
+\usepackage{stmaryrd}
+%%\usepackage{ndetextras}
+%%\usepackage{fleqnbird}
+
+
+%% ODER: format ==         = "\mathrel{==}"
+%% ODER: format /=         = "\neq "
+%
+%
+\makeatletter
+\@ifundefined{lhs2tex.lhs2tex.sty.read}%
+  {\@namedef{lhs2tex.lhs2tex.sty.read}{}%
+   \newcommand\SkipToFmtEnd{}%
+   \newcommand\EndFmtInput{}%
+   \long\def\SkipToFmtEnd#1\EndFmtInput{}%
+  }\SkipToFmtEnd
+
+\newcommand\ReadOnlyOnce[1]{\@ifundefined{#1}{\@namedef{#1}{}}\SkipToFmtEnd}
+\usepackage{amstext}
+\usepackage{amssymb}
+\usepackage{stmaryrd}
+\DeclareFontFamily{OT1}{cmtex}{}
+\DeclareFontShape{OT1}{cmtex}{m}{n}
+  {<5><6><7><8>cmtex8
+   <9>cmtex9
+   <10><10.95><12><14.4><17.28><20.74><24.88>cmtex10}{}
+\DeclareFontShape{OT1}{cmtex}{m}{it}
+  {<-> ssub * cmtt/m/it}{}
+\newcommand{\texfamily}{\fontfamily{cmtex}\selectfont}
+\DeclareFontShape{OT1}{cmtt}{bx}{n}
+  {<5><6><7><8>cmtt8
+   <9>cmbtt9
+   <10><10.95><12><14.4><17.28><20.74><24.88>cmbtt10}{}
+\DeclareFontShape{OT1}{cmtex}{bx}{n}
+  {<-> ssub * cmtt/bx/n}{}
+\newcommand{\tex}[1]{\text{\texfamily#1}}	% NEU
+
+\newcommand{\Sp}{\hskip.33334em\relax}
+
+
+\newcommand{\Conid}[1]{\mathit{#1}}
+\newcommand{\Varid}[1]{\mathit{#1}}
+\newcommand{\anonymous}{\kern0.06em \vbox{\hrule\@width.5em}}
+\newcommand{\plus}{\mathbin{+\!\!\!+}}
+\newcommand{\bind}{\mathbin{>\!\!\!>\mkern-6.7mu=}}
+\newcommand{\rbind}{\mathbin{=\mkern-6.7mu<\!\!\!<}}% suggested by Neil Mitchell
+\newcommand{\sequ}{\mathbin{>\!\!\!>}}
+\renewcommand{\leq}{\leqslant}
+\renewcommand{\geq}{\geqslant}
+\usepackage{polytable}
+
+%mathindent has to be defined
+\@ifundefined{mathindent}%
+  {\newdimen\mathindent\mathindent\leftmargini}%
+  {}%
+
+\def\resethooks{%
+  \global\let\SaveRestoreHook\empty
+  \global\let\ColumnHook\empty}
+\newcommand*{\savecolumns}[1][default]%
+  {\g@addto@macro\SaveRestoreHook{\savecolumns[#1]}}
+\newcommand*{\restorecolumns}[1][default]%
+  {\g@addto@macro\SaveRestoreHook{\restorecolumns[#1]}}
+\newcommand*{\aligncolumn}[2]%
+  {\g@addto@macro\ColumnHook{\column{#1}{#2}}}
+
+\resethooks
+
+\newcommand{\onelinecommentchars}{\quad-{}- }
+\newcommand{\commentbeginchars}{\enskip\{-}
+\newcommand{\commentendchars}{-\}\enskip}
+
+\newcommand{\visiblecomments}{%
+  \let\onelinecomment=\onelinecommentchars
+  \let\commentbegin=\commentbeginchars
+  \let\commentend=\commentendchars}
+
+\newcommand{\invisiblecomments}{%
+  \let\onelinecomment=\empty
+  \let\commentbegin=\empty
+  \let\commentend=\empty}
+
+\visiblecomments
+
+\newlength{\blanklineskip}
+\setlength{\blanklineskip}{0.66084ex}
+
+\newcommand{\hsindent}[1]{\quad}% default is fixed indentation
+\let\hspre\empty
+\let\hspost\empty
+\newcommand{\NB}{\textbf{NB}}
+\newcommand{\Todo}[1]{$\langle$\textbf{To do:}~#1$\rangle$}
+
+\EndFmtInput
+\makeatother
+%
+%
+%
+%
+%
+%
+% This package provides two environments suitable to take the place
+% of hscode, called "plainhscode" and "arrayhscode". 
+%
+% The plain environment surrounds each code block by vertical space,
+% and it uses \abovedisplayskip and \belowdisplayskip to get spacing
+% similar to formulas. Note that if these dimensions are changed,
+% the spacing around displayed math formulas changes as well.
+% All code is indented using \leftskip.
+%
+% Changed 19.08.2004 to reflect changes in colorcode. Should work with
+% CodeGroup.sty.
+%
+\ReadOnlyOnce{polycode.fmt}%
+\makeatletter
+
+\newcommand{\hsnewpar}[1]%
+  {{\parskip=0pt\parindent=0pt\par\vskip #1\noindent}}
+
+% can be used, for instance, to redefine the code size, by setting the
+% command to \small or something alike
+\newcommand{\hscodestyle}{}
+
+% The command \sethscode can be used to switch the code formatting
+% behaviour by mapping the hscode environment in the subst directive
+% to a new LaTeX environment.
+
+\newcommand{\sethscode}[1]%
+  {\expandafter\let\expandafter\hscode\csname #1\endcsname
+   \expandafter\let\expandafter\endhscode\csname end#1\endcsname}
+
+% "compatibility" mode restores the non-polycode.fmt layout.
+
+\newenvironment{compathscode}%
+  {\par\noindent
+   \advance\leftskip\mathindent
+   \hscodestyle
+   \let\\=\@normalcr
+   \let\hspre\(\let\hspost\)%
+   \pboxed}%
+  {\endpboxed\)%
+   \par\noindent
+   \ignorespacesafterend}
+
+\newcommand{\compaths}{\sethscode{compathscode}}
+
+% "plain" mode is the proposed default.
+% It should now work with \centering.
+% This required some changes. The old version
+% is still available for reference as oldplainhscode.
+
+\newenvironment{plainhscode}%
+  {\hsnewpar\abovedisplayskip
+   \advance\leftskip\mathindent
+   \hscodestyle
+   \let\hspre\(\let\hspost\)%
+   \pboxed}%
+  {\endpboxed%
+   \hsnewpar\belowdisplayskip
+   \ignorespacesafterend}
+
+\newenvironment{oldplainhscode}%
+  {\hsnewpar\abovedisplayskip
+   \advance\leftskip\mathindent
+   \hscodestyle
+   \let\\=\@normalcr
+   \(\pboxed}%
+  {\endpboxed\)%
+   \hsnewpar\belowdisplayskip
+   \ignorespacesafterend}
+
+% Here, we make plainhscode the default environment.
+
+\newcommand{\plainhs}{\sethscode{plainhscode}}
+\newcommand{\oldplainhs}{\sethscode{oldplainhscode}}
+\plainhs
+
+% The arrayhscode is like plain, but makes use of polytable's
+% parray environment which disallows page breaks in code blocks.
+
+\newenvironment{arrayhscode}%
+  {\hsnewpar\abovedisplayskip
+   \advance\leftskip\mathindent
+   \hscodestyle
+   \let\\=\@normalcr
+   \(\parray}%
+  {\endparray\)%
+   \hsnewpar\belowdisplayskip
+   \ignorespacesafterend}
+
+\newcommand{\arrayhs}{\sethscode{arrayhscode}}
+
+% The mathhscode environment also makes use of polytable's parray 
+% environment. It is supposed to be used only inside math mode 
+% (I used it to typeset the type rules in my thesis).
+
+\newenvironment{mathhscode}%
+  {\parray}{\endparray}
+
+\newcommand{\mathhs}{\sethscode{mathhscode}}
+
+% texths is similar to mathhs, but works in text mode.
+
+\newenvironment{texthscode}%
+  {\(\parray}{\endparray\)}
+
+\newcommand{\texths}{\sethscode{texthscode}}
+
+% The framed environment places code in a framed box.
+
+\def\codeframewidth{\arrayrulewidth}
+\RequirePackage{calc}
+
+\newenvironment{framedhscode}%
+  {\parskip=\abovedisplayskip\par\noindent
+   \hscodestyle
+   \arrayrulewidth=\codeframewidth
+   \tabular{@{}|p{\linewidth-2\arraycolsep-2\arrayrulewidth-2pt}|@{}}%
+   \hline\framedhslinecorrect\\{-1.5ex}%
+   \let\endoflinesave=\\
+   \let\\=\@normalcr
+   \(\pboxed}%
+  {\endpboxed\)%
+   \framedhslinecorrect\endoflinesave{.5ex}\hline
+   \endtabular
+   \parskip=\belowdisplayskip\par\noindent
+   \ignorespacesafterend}
+
+\newcommand{\framedhslinecorrect}[2]%
+  {#1[#2]}
+
+\newcommand{\framedhs}{\sethscode{framedhscode}}
+
+% The inlinehscode environment is an experimental environment
+% that can be used to typeset displayed code inline.
+
+\newenvironment{inlinehscode}%
+  {\(\def\column##1##2{}%
+   \let\>\undefined\let\<\undefined\let\\\undefined
+   \newcommand\>[1][]{}\newcommand\<[1][]{}\newcommand\\[1][]{}%
+   \def\fromto##1##2##3{##3}%
+   \def\nextline{}}{\) }%
+
+\newcommand{\inlinehs}{\sethscode{inlinehscode}}
+
+% The joincode environment is a separate environment that
+% can be used to surround and thereby connect multiple code
+% blocks.
+
+\newenvironment{joincode}%
+  {\let\orighscode=\hscode
+   \let\origendhscode=\endhscode
+   \def\endhscode{\def\hscode{\endgroup\def\@currenvir{hscode}\\}\begingroup}
+   %\let\SaveRestoreHook=\empty
+   %\let\ColumnHook=\empty
+   %\let\resethooks=\empty
+   \orighscode\def\hscode{\endgroup\def\@currenvir{hscode}}}%
+  {\origendhscode
+   \global\let\hscode=\orighscode
+   \global\let\endhscode=\origendhscode}%
+
+\makeatother
+\EndFmtInput
+%
+% names for Greek letters
+%
+
+% handling the "." in "forall x . p" and "\ x . e"
+%
+%
+% First, let's redefine the forall, and the dot.
+%
+%
+% This is made in such a way that after a forall, the next
+% dot will be printed as a period, otherwise the formatting
+% of `comp_` is used. By redefining `comp_`, as suitable
+% composition operator can be chosen. Similarly, period_
+% is used for the period.
+%
+\ReadOnlyOnce{forall.fmt}%
+\makeatletter
+
+% The HaskellResetHook is a list to which things can
+% be added that reset the Haskell state to the beginning.
+% This is to recover from states where the hacked intelligence
+% is not sufficient.
+
+\let\HaskellResetHook\empty
+\newcommand*{\AtHaskellReset}[1]{%
+  \g@addto@macro\HaskellResetHook{#1}}
+\newcommand*{\HaskellReset}{\HaskellResetHook}
+
+\global\let\hsforallread\empty
+
+\newcommand\hsforall{\global\let\hsdot=\hsperiodonce}
+\newcommand*\hsperiodonce[2]{#2\global\let\hsdot=\hscompose}
+\newcommand*\hscompose[2]{#1}
+
+\AtHaskellReset{\global\let\hsdot=\hscompose}
+
+% In the beginning, we should reset Haskell once.
+\HaskellReset
+
+\makeatother
+\EndFmtInput
+%
+%
+\ReadOnlyOnce{lambda.fmt}%
+\makeatletter
+
+\newcommand\hslambda{\global\let\hsarrow=\hsarrowperiodonce}
+\newcommand*\hsarrowperiodonce[2]{#2\global\let\hsarrow=\hscompose}
+
+\AtHaskellReset{\global\let\hsarrow=\hscompose}
+
+% In the beginning, we should reset Haskell once.
+\HaskellReset
+
+\makeatother
+\EndFmtInput
+%
+%
+\ReadOnlyOnce{exists.fmt}%
+\makeatletter
+
+\newcommand\hsexists{\global\let\hsdot=\hsperiodonce}
+
+\AtHaskellReset{\global\let\hsdot=\hscompose}
+
+% In the beginning, we should reset Haskell once.
+\HaskellReset
+
+\makeatother
+\EndFmtInput
+
+% spacing
+
+% logical operators
+
+% various "operators", in roman rather than italics
+
+% odd constants and identifiers
+\def\anonymous{\kern0.06em \vbox{\hrule width.5em}\kern0.1em }
+
+% arithmetic 
+
+% some operators
+
+% punctuation
+
+% subscripted letters
+
+% subscripted identifiers
+
+% binary operators
+\renewcommand{\plus}{\mathbin{+\!\!\!\!+}}
+
+% refinement
+
+\def\commentbegin{\quad$\{$~}
+\def\commentend{$\}$}
+
+\pagestyle{plain} % remove for final version
+
+\setcounter{tocdepth}{2} % for pdf bookmarks
+\usepackage[bookmarks,bookmarksnumbered,bookmarksopen,colorlinks,citecolor=red]{hyperref}
+
+\begin{document}
+\bibliographystyle{plain}
+
+\title{How to calculate with nondeterministic functions}
+\titlerunning{How to calculate with nondeterministic functions}
+\author{Richard Bird\inst{1} \and Florian Rabe\inst{2}}
+\institute{Department of Computer Science, Oxford University\\
+Wolfson Building, Parks Road, Oxford, OX1 3QD, UK
+\and Laboratoire de Recherche en Informatique, University Paris Sud\\
+Rue Noetzlin 91405 Orsay Cedex, France}
+
+\date{}
+\maketitle
+
+\begin{abstract}
+While simple equational reasoning is adequate for the calculation of many algorithms from 
+their functional specifications, it is not up to the task of dealing with others,
+particularly those specified as optimisation problems. One approach is to replace functions by 
+relations, and equational reasoning by reasoning about relational inclusion. But such a wholesale 
+approach means one has to adopt a new and sometimes subtle language to argue about the properties 
+of relational expressions. A more modest proposal is to generalise our powers of specification by 
+allowing certain nondeterministic, or multi-valued functions, and to reason about refinement instead. 
+Such functions will not appear in any final code. Refinement calculi have been studied extensively 
+over the years and our aim in this article is just to explore the issues in a simple setting and to 
+justify the axioms of refinement using the semantics suggested by Morris and Bunkenburg.
+\end{abstract}
+
+\section{Introduction}
+
+We set the scene by considering the following Haskell definition for an archetypal 
+optimisation problem:
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[5]{}\Varid{mcc}\mathbin{::}[\mskip1.5mu \Conid{Item}\mskip1.5mu]\hsarrow{\rightarrow }{\mathpunct{.}}\Conid{Candidate}{}\<[E]%
+\\
+\>[5]{}\Varid{mcc}\mathrel{=}\Varid{minWith}\;\Varid{cost}\hsdot{\cdot }{:}\Varid{candidates}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+The function \ensuremath{\Varid{mcc}} computes a candidate with minimum cost. The function \ensuremath{\Varid{minWith}} can be
+defined by
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{21}{@{}>{\hspre}c<{\hspost}@{}}%
+\column{21E}{@{}l@{}}%
+\column{24}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[5]{}\Varid{minWith}\mathbin{::}\Conid{Ord}\;\Varid{b}\Rightarrow (\Varid{a}\hsarrow{\rightarrow }{\mathpunct{.}}\Varid{b})\hsarrow{\rightarrow }{\mathpunct{.}}[\mskip1.5mu \Varid{a}\mskip1.5mu]\hsarrow{\rightarrow }{\mathpunct{.}}\Varid{a}{}\<[E]%
+\\
+\>[5]{}\Varid{minWith}\;\Varid{f}{}\<[21]%
+\>[21]{}\mathrel{=}{}\<[21E]%
+\>[24]{}\Varid{foldr1}\;\Varid{smaller}{}\<[E]%
+\\
+\>[24]{}\mathbf{where}\;\Varid{smaller}\;\Varid{x}\;\Varid{y}\mathrel{=}\mathbf{if}\;\Varid{f}\;\Varid{x}\leq \Varid{f}\;\Varid{y}\;\mathbf{then}\;\Varid{x}\;\mathbf{else}\;\Varid{y}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+Applied to a finite, nonempty list of candidates, \ensuremath{\Varid{minWith}\;\Varid{cost}} returns the first candidate 
+with minimum cost. The function \ensuremath{\Varid{candidates}} takes a finite list of items and returns a finite,
+nonempty list of candidates. We will suppose that the construction uses \ensuremath{\Varid{foldr}}:    
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{20}{@{}>{\hspre}c<{\hspost}@{}}%
+\column{20E}{@{}l@{}}%
+\column{23}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{40}{@{}>{\hspre}c<{\hspost}@{}}%
+\column{40E}{@{}l@{}}%
+\column{43}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[5]{}\Varid{candidates}\mathbin{::}[\mskip1.5mu \Conid{Item}\mskip1.5mu]\hsarrow{\rightarrow }{\mathpunct{.}}[\mskip1.5mu \Conid{Candidate}\mskip1.5mu]{}\<[E]%
+\\
+\>[5]{}\Varid{candidates}\;\Varid{xs}{}\<[20]%
+\>[20]{}\mathrel{=}{}\<[20E]%
+\>[23]{}\Varid{foldr}\;\Varid{step}\;[\mskip1.5mu \Varid{c}_{0}\mskip1.5mu]\;\Varid{xs}{}\<[E]%
+\\
+\>[23]{}\mathbf{where}\;\Varid{step}\;\Varid{x}\;\Varid{cs}{}\<[40]%
+\>[40]{}\mathrel{=}{}\<[40E]%
+\>[43]{}\Varid{concatMap}\;(\Varid{additions}\;\Varid{x})\;\Varid{cs}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+The value \ensuremath{\Varid{c}_{0}} is some default candidate for an empty list of items. The function \ensuremath{\Varid{concatMap}} 
+is defined by 
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[5]{}\Varid{concatMap}\;\Varid{f}\mathrel{=}\Varid{concat}\hsdot{\cdot }{:}\Varid{map}\;\Varid{f}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+and \ensuremath{\Varid{additions}\mathbin{::}\Conid{Item}\hsarrow{\rightarrow }{\mathpunct{.}}\Conid{Candidate}\hsarrow{\rightarrow }{\mathpunct{.}}[\mskip1.5mu \Conid{Candidate}\mskip1.5mu]} takes a new item and a candidate and 
+constructs a nonempty list of extended candidates.
+For example, if the candidates were the permutations of a list, then \ensuremath{\Varid{c}_{0}} would be the empty list 
+and \ensuremath{\Varid{additions}\;\Varid{x}} would be a list of all the ways \ensuremath{\Varid{x}} can be inserted into a given permutation.
+For example,
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[5]{}\Varid{additions}\;\mathrm{1}\;[\mskip1.5mu \mathrm{2},\mathrm{4},\mathrm{3}\mskip1.5mu]\mathrel{=}[\mskip1.5mu [\mskip1.5mu \mathrm{1},\mathrm{2},\mathrm{4},\mathrm{3}\mskip1.5mu],[\mskip1.5mu \mathrm{2},\mathrm{1},\mathrm{4},\mathrm{3}\mskip1.5mu],[\mskip1.5mu \mathrm{2},\mathrm{4},\mathrm{1},\mathrm{3}\mskip1.5mu],[\mskip1.5mu \mathrm{2},\mathrm{4},\mathrm{3},\mathrm{1}\mskip1.5mu]\mskip1.5mu]{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+A greedy algorithm for \ensuremath{\Varid{mcc}} arises as the result of successfully fusing the function
+\ensuremath{\Varid{minWith}\;\Varid{cost}} with \ensuremath{\Varid{candidates}}. Operationally speaking, instead of 
+building the complete list of candidates and then selecting a best one, we 
+construct a single best candidate at each step. The usual formulation of the 
+fusion rule for \ensuremath{\Varid{foldr}} states that
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[5]{}\Varid{foldr}\;\Varid{f}\;(\Varid{h}\;\Varid{e})\;\Varid{xs}\mathrel{=}\Varid{h}\;(\Varid{foldr}\;\Varid{g}\;\Varid{e}\;\Varid{xs}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+for all finite lists \ensuremath{\Varid{xs}} provided the fusion condition 
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[5]{}\Varid{h}\;(\Varid{g}\;\Varid{x}\;\Varid{y})\mathrel{=}\Varid{f}\;\Varid{x}\;(\Varid{h}\;\Varid{y}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+holds for all \ensuremath{\Varid{x}} and \ensuremath{\Varid{y}}. In fact the fusion condition is required to hold only for
+all \ensuremath{\Varid{y}} of the form \ensuremath{\Varid{y}\mathrel{=}\Varid{foldr}\;\Varid{g}\;\Varid{e}\;\Varid{xs}}; this version is called \emph{context-sensitive}
+fusion.
+
+For our problem, \ensuremath{\Varid{h}\mathrel{=}\Varid{minWith}\;\Varid{cost}} and \ensuremath{\Varid{g}\mathrel{=}\Varid{step}} but \ensuremath{\Varid{f}} is unknown. Abbreviating
+\ensuremath{\Varid{candidates}\;\Varid{xs}} to \ensuremath{\Varid{cs}}, the context-sensitive fusion condition reads
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[5]{}\Varid{minWith}\;\Varid{cost}\;(\Varid{step}\;\Varid{x}\;\Varid{cs})\mathrel{=}\Varid{add}\;\Varid{x}\;(\Varid{minWith}\;\Varid{cost}\;\Varid{cs}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+for some function \ensuremath{\Varid{add}}. To see if it holds, and to discover \ensuremath{\Varid{add}} in the process, 
+we can reason:
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}c<{\hspost}@{}}%
+\column{BE}{@{}l@{}}%
+\column{4}{@{}>{\hspre}c<{\hspost}@{}}%
+\column{4E}{@{}l@{}}%
+\column{8}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{10}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[4]{}\hspace{1.5em}{}\<[4E]%
+\>[8]{}\Varid{minWith}\;\Varid{cost}\;(\Varid{step}\;\Varid{x}\;\Varid{cs}){}\<[E]%
+\\
+\>[B]{}\mathrel{=}{}\<[BE]%
+\>[10]{}\mbox{\commentbegin  definition of \ensuremath{\Varid{step}}  \commentend}{}\<[E]%
+\\
+\>[B]{}\hsindent{8}{}\<[8]%
+\>[8]{}\Varid{minWith}\;\Varid{cost}\;(\Varid{concatMap}\;(\Varid{additions}\;\Varid{x})\;\Varid{cs}){}\<[E]%
+\\
+\>[B]{}\mathrel{=}{}\<[BE]%
+\>[10]{}\mbox{\commentbegin  distributive law (see below)  \commentend}{}\<[E]%
+\\
+\>[B]{}\hsindent{8}{}\<[8]%
+\>[8]{}\Varid{minWith}\;\Varid{cost}\;(\Varid{map}\;(\Varid{minWith}\;\Varid{cost}\hsdot{\cdot }{:}\Varid{additions}\;\Varid{x})\;\Varid{cs}){}\<[E]%
+\\
+\>[B]{}\mathrel{=}{}\<[BE]%
+\>[10]{}\mbox{\commentbegin  define \ensuremath{\Varid{add}\;\Varid{x}\mathrel{=}\Varid{minWith}\;\Varid{cost}\hsdot{\cdot }{:}\Varid{additions}\;\Varid{x}}  \commentend}{}\<[E]%
+\\
+\>[B]{}\hsindent{8}{}\<[8]%
+\>[8]{}\Varid{minWith}\;\Varid{cost}\;(\Varid{map}\;(\Varid{add}\;\Varid{x})\;\Varid{cs}){}\<[E]%
+\\
+\>[B]{}\mathrel{=}{}\<[BE]%
+\>[10]{}\mbox{\commentbegin  greedy condition (see below)  \commentend}{}\<[E]%
+\\
+\>[B]{}\hsindent{8}{}\<[8]%
+\>[8]{}\Varid{add}\;\Varid{x}\;(\Varid{minWith}\;\Varid{cost}\;\Varid{cs}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+The distributive law used in the second step is the fact that
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[5]{}\Varid{minWith}\;\Varid{f}\;(\Varid{concat}\;\Varid{xss})\mathrel{=}\Varid{minWith}\;\Varid{f}\;(\Varid{map}\;(\Varid{minWith}\;\Varid{f})\;\Varid{xss}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+provided \ensuremath{\Varid{xss}} is a finite list of finite, nonempty lists. Equivalently,
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[5]{}\Varid{minWith}\;\Varid{f}\;(\Varid{concatMap}\;\Varid{g}\;\Varid{xs})\mathrel{=}\Varid{minWith}\;\Varid{f}\;(\Varid{map}\;(\Varid{minWith}\;\Varid{f}\hsdot{\cdot }{:}\Varid{g})\;\Varid{xs}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+provided \ensuremath{\Varid{xs}} is a finite list and \ensuremath{\Varid{g}} returns finite, nonempty lists. The proof 
+of the distributivity law is straightforward but we omit details.
+
+Summarising this short calculation, we have shown that
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{12}{@{}>{\hspre}c<{\hspost}@{}}%
+\column{12E}{@{}l@{}}%
+\column{15}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{29}{@{}>{\hspre}c<{\hspost}@{}}%
+\column{29E}{@{}l@{}}%
+\column{32}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{39}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{46}{@{}>{\hspre}c<{\hspost}@{}}%
+\column{46E}{@{}l@{}}%
+\column{49}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[5]{}\Varid{mcc}{}\<[12]%
+\>[12]{}\mathrel{=}{}\<[12E]%
+\>[15]{}\Varid{foldr}\;\Varid{add}\;\Varid{c}_{0}{}\<[29]%
+\>[29]{}\enspace{}\<[29E]%
+\>[32]{}\mathbf{where}\;{}\<[39]%
+\>[39]{}\Varid{add}\;\Varid{x}{}\<[46]%
+\>[46]{}\mathrel{=}{}\<[46E]%
+\>[49]{}\Varid{minWith}\;\Varid{cost}\hsdot{\cdot }{:}\Varid{additions}\;\Varid{x}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+provided the following \emph{greedy condition} holds for all \ensuremath{\Varid{x}} and \ensuremath{\Varid{xs}}:
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[5]{}\Varid{minWith}\;\Varid{cost}\;(\Varid{map}\;(\Varid{add}\;\Varid{x})\;\Varid{cs})\mathrel{=}\Varid{add}\;\Varid{x}\;(\Varid{minWith}\;\Varid{cost}\;\Varid{cs}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+where \ensuremath{\Varid{cs}\mathrel{=}\Varid{candidates}\;\Varid{xs}}.
+
+That all seems simple enough. However, the fly in the ointment is that, in order to 
+establish the greedy condition when there may be more than one candidate in \ensuremath{\Varid{cs}} with 
+minimum cost, we need to prove the very strong fact that
+\begin{equation}
+\label{strong}
+\ensuremath{\Varid{cost}\;\Varid{c}\leq \Varid{cost}\;\Varid{c'}\enspace\Leftrightarrow\enspace\Varid{cost}\;(\Varid{add}\;\Varid{x}\;\Varid{c})\leq \Varid{cost}\;(\Varid{add}\;\Varid{x}\;\Varid{c'})}
+\end{equation}
+for all candidates \ensuremath{\Varid{c}} and \ensuremath{\Varid{c'}} in \ensuremath{\Varid{cs}}. To see why, observe that if \ensuremath{\Varid{c}} is the 
+first candidate with minimum cost in a list of candidates, then \ensuremath{\Varid{add}\;\Varid{x}\;\Varid{c}} has to be the first 
+candidate with minimum cost in the list of extended candidates. This follows from our definition 
+of \ensuremath{\Varid{minWith}} which selects the first element with minimum cost in a list of candidates. To ensure 
+that the extension of a candidate \ensuremath{\Varid{c'}} earlier in the list has a larger cost we have to show that
+\begin{equation}
+\label{mono1}
+\ensuremath{\Varid{cost}\;\Varid{c'}\mathbin{>}\Varid{cost}\;\Varid{c}\enspace\Rightarrow\enspace\Varid{cost}\;(\Varid{add}\;\Varid{x}\;\Varid{c'})\mathbin{>}\Varid{cost}\;(\Varid{add}\;\Varid{x}\;\Varid{c})}
+\end{equation}
+for all \ensuremath{\Varid{c}} and \ensuremath{\Varid{c'}} in \ensuremath{\Varid{cs}}. To ensure that the extension of a candidate \ensuremath{\Varid{c'}} later in the list 
+does not have a smaller cost we have to show that 
+\begin{equation}
+\label{mono2}
+\ensuremath{\Varid{cost}\;\Varid{c}\leq \Varid{cost}\;\Varid{c'}\enspace\Rightarrow\enspace\Varid{cost}\;(\Varid{add}\;\Varid{x}\;\Varid{c})\leq \Varid{cost}\;(\Varid{add}\;\Varid{x}\;\Varid{c'})}
+\end{equation}
+for all \ensuremath{\Varid{c}} and \ensuremath{\Varid{c'}} in \ensuremath{\Varid{cs}}. The conjunction of (\ref{mono1}) and (\ref{mono2}) is 
+(\ref{strong}). The problem is that (\ref{strong}) is so strong that it rarely holds in 
+practice. As evidence for this assertion, the appendix briefly discusses one example. A similar 
+condition is needed if, say, \ensuremath{\Varid{minWith}} returned the last element in a list with minimum cost, 
+so the problem is not to do with the specific definition of \ensuremath{\Varid{minWith}}. What we really need 
+is a form of reasoning that allows us to establish the necessary fusion condition from the 
+simple monotonicity condition (\ref{mono2}) alone, and the plain fact of the matter is that 
+equational reasoning with any definition of \ensuremath{\Varid{minWith}} is simply not adequate to provide it.
+
+It follows that we have to abandon equational reasoning.  One approach is to replace our 
+functional framework with a relational one, and to reason instead about the inclusion of one 
+relation in another. Such an approach has been suggested in a number of places, including our 
+own \cite{bird&demoor}. But, for the purposes of presenting a simple introduction to the 
+subject of greedy algorithms in Haskell, this solution is way too drastic, more akin to 
+a heart transplant than a tube of solvent for occasional use. The alternative, if it can be 
+made to work smoothly, is to introduce nondeterministic functions, also called 
+\emph{multi-valued} functions in mathematics, and to reason about refinement. 
+
+The necessary
+intuitions and syntax are introduced in Section~\ref{sec:syn}. Section~\ref{sec:calc} gives 
+a formal calculus and Section~\ref{sec:sem} a denotational semantics for our language.
+The soundness of the semantics establishes the consistency of the calculus.
+We have formalised syntax, calculus, and semantics in the logical framework LF \cite{lf} and are in the process of also formalizing the soundness proof; the formalisation is not given in this paper but is available online\footnote{\url{https://github.com/florian-rabe/nondet}}.
+
+\section{Nondeterminism and refinement}\label{sec:syn}
+
+Suppose we introduce \ensuremath{\Conid{MinWith}} as a nondeterministic function, specified only 
+by the condition that if \ensuremath{\Varid{x}} is a possible value of \ensuremath{\Conid{MinWith}\;\Varid{f}\;\Varid{xs}},
+where \ensuremath{\Varid{xs}} is a finite nonempty list, then \ensuremath{\Varid{x}} is an element of \ensuremath{\Varid{xs}} and for all
+elements \ensuremath{\Varid{y}} of \ensuremath{\Varid{xs}} we have \ensuremath{\Varid{f}\;\Varid{x}\leq \Varid{f}\;\Varid{y}}.
+Note the initial capital letter: \ensuremath{\Conid{MinWith}} is not part of Haskell. It is
+not our intention to extend Haskell with nondeterministic functions; instead
+nondeterminism is simply there to extend our powers of specification and cannot
+appear in any final algorithm. 
+
+
+Suppose we define \ensuremath{\Varid{y}\leftarrow\Conid{F}\;\Varid{x}} to mean that \ensuremath{\Varid{y}} is one possible 
+output of the nondeterministic function \ensuremath{\Conid{F}} applied to a value \ensuremath{\Varid{x}}. 
+In words, \ensuremath{\Varid{y}} is a possible \emph{refinement} of the nondeterministic 
+expression \ensuremath{\Conid{F}\;\Varid{x}}. For example, \ensuremath{\mathrm{1}\leftarrow\Conid{MinWith}\;(\Varid{const}\;\mathrm{0})\;[\mskip1.5mu \mathrm{1},\mathrm{2}\mskip1.5mu]} and
+\ensuremath{\mathrm{2}\leftarrow\Conid{MinWith}\;(\Varid{const}\;\mathrm{0})\;[\mskip1.5mu \mathrm{1},\mathrm{2}\mskip1.5mu]}. More generally, if \ensuremath{\Conid{E}_{1}} and \ensuremath{\Conid{E}_{2}} are possibly 
+nondeterministic expressions of the same type \ensuremath{\Conid{T}}, we will write \ensuremath{\Conid{E}_{1}\leftarrow\Conid{E}_{2}} to 
+mean that for all values \ensuremath{\Varid{v}} of \ensuremath{\Conid{T}} we have
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{14}{@{}>{\hspre}c<{\hspost}@{}}%
+\column{14E}{@{}l@{}}%
+\column{17}{@{}>{\hspre}c<{\hspost}@{}}%
+\column{17E}{@{}l@{}}%
+\column{22}{@{}>{\hspre}c<{\hspost}@{}}%
+\column{22E}{@{}l@{}}%
+\column{25}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[5]{}\Varid{v}\leftarrow\Conid{E}_{1}{}\<[14]%
+\>[14]{}\enspace{}\<[14E]%
+\>[17]{}\Rightarrow{}\<[17E]%
+\>[22]{}\enspace{}\<[22E]%
+\>[25]{}\Varid{v}\leftarrow\Conid{E}_{2}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+We define two nondeterministic expressions of the same type to be equal
+if they both have the same set of refinements: \ensuremath{\Conid{E}_{1}\mathrel{=}\Conid{E}_{2}} if
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{14}{@{}>{\hspre}c<{\hspost}@{}}%
+\column{14E}{@{}l@{}}%
+\column{17}{@{}>{\hspre}c<{\hspost}@{}}%
+\column{17E}{@{}l@{}}%
+\column{23}{@{}>{\hspre}c<{\hspost}@{}}%
+\column{23E}{@{}l@{}}%
+\column{26}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[5]{}\Varid{v}\leftarrow\Conid{E}_{1}{}\<[14]%
+\>[14]{}\enspace{}\<[14E]%
+\>[17]{}\Leftrightarrow{}\<[17E]%
+\>[23]{}\enspace{}\<[23E]%
+\>[26]{}\Varid{v}\leftarrow\Conid{E}_{2}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+for all \ensuremath{\Varid{v}}. Equivalently, 
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{14}{@{}>{\hspre}c<{\hspost}@{}}%
+\column{14E}{@{}l@{}}%
+\column{17}{@{}>{\hspre}c<{\hspost}@{}}%
+\column{17E}{@{}l@{}}%
+\column{23}{@{}>{\hspre}c<{\hspost}@{}}%
+\column{23E}{@{}l@{}}%
+\column{26}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[5]{}\Conid{E}_{1}\mathrel{=}\Conid{E}_{2}{}\<[14]%
+\>[14]{}\enspace{}\<[14E]%
+\>[17]{}\Leftrightarrow{}\<[17E]%
+\>[23]{}\enspace{}\<[23E]%
+\>[26]{}\Conid{E}_{1}\leftarrow\Conid{E}_{2}\mathrel{\wedge}\Conid{E}_{2}\leftarrow\Conid{E}_{1}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+which just says that \ensuremath{\leftarrow} is anti-symmetric. Our task is to make
+precise the exact rules allowed for reasoning about \ensuremath{\leftarrow} and to prove that
+these rules do not lead to contradictions.
+
+To illustrate some of the pitfalls that have to be avoided, we consider three examples.
+First, here is the distributive law again in which \ensuremath{\Varid{minWith}} is replaced by \ensuremath{\Conid{MinWith}}:
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[5]{}\Conid{MinWith}\;\Varid{f}\;(\Varid{concat}\;\Varid{xss})\mathrel{=}\Conid{MinWith}\;\Varid{f}\;(\Varid{map}\;(\Conid{MinWith}\;\Varid{f})\;\Varid{xss}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+If this equation is to hold for all finite, nonempty lists \ensuremath{\Varid{xss}} of finite, nonempty lists, 
+and we do indeed want it to, then it has to mean there is no refinement of one side 
+that is not also a refinement of the other side. It does \emph{not} mean that the 
+equation should hold for all possible implementations of \ensuremath{\Conid{MinWith}}, and it cannot mean 
+that because it is false. Suppose we define \ensuremath{\Varid{minWith}} to return the \emph{second} best 
+candidate in a list of candidates, or the only best candidate if there is 
+only one. In particular,
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{62}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[5]{}\Varid{minWith}\;(\Varid{const}\;\mathrm{0})\;(\Varid{concat}\;[\mskip1.5mu [\mskip1.5mu \Varid{a}\mskip1.5mu],[\mskip1.5mu \Varid{b},\Varid{c}\mskip1.5mu]\mskip1.5mu]){}\<[62]%
+\>[62]{}\mathrel{=}\Varid{b}{}\<[E]%
+\\
+\>[5]{}\Varid{minWith}\;(\Varid{const}\;\mathrm{0})\;(\Varid{map}\;(\Varid{minWith}\;(\Varid{const}\;\mathrm{0}))\;[\mskip1.5mu [\mskip1.5mu \Varid{a}\mskip1.5mu],[\mskip1.5mu \Varid{b},\Varid{c}\mskip1.5mu]\mskip1.5mu]){}\<[62]%
+\>[62]{}\mathrel{=}\Varid{c}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+The results are different so the distributive law fails. What the distributive law has 
+to mean is the conjunction of the following two assertions, in which \ensuremath{\Conid{M}} abbreviates 
+\ensuremath{\Conid{MinWith}\;\Varid{cost}}:
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{33}{@{}>{\hspre}c<{\hspost}@{}}%
+\column{33E}{@{}l@{}}%
+\column{36}{@{}>{\hspre}c<{\hspost}@{}}%
+\column{36E}{@{}l@{}}%
+\column{41}{@{}>{\hspre}c<{\hspost}@{}}%
+\column{41E}{@{}l@{}}%
+\column{44}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{x}\leftarrow\Conid{M}\;(\Varid{concat}\;\Varid{xss}){}\<[33]%
+\>[33]{}\enspace{}\<[33E]%
+\>[36]{}\Rightarrow{}\<[36E]%
+\>[41]{}\enspace{}\<[41E]%
+\>[44]{}(\exists \Varid{xs}\hsexists \hsdot{\cdot }{:}\Varid{xs}\leftarrow\Varid{map}\;\Conid{M}\;\Varid{xss}\mathrel{\wedge}\Varid{x}\leftarrow\Conid{M}\;\Varid{xs}){}\<[E]%
+\\
+\>[B]{}(\Varid{xs}\leftarrow\Varid{map}\;\Conid{M}\;\Varid{xss}\mathrel{\wedge}\Varid{x}\leftarrow\Conid{M}\;\Varid{xs}){}\<[33]%
+\>[33]{}\enspace{}\<[33E]%
+\>[36]{}\Rightarrow{}\<[36E]%
+\>[41]{}\enspace{}\<[41E]%
+\>[44]{}\Varid{x}\leftarrow\Conid{M}\;(\Varid{concat}\;\Varid{xss}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+It is easy enough to show that these two assertions do hold though we omit details.
+
+For the remaining two examples, define
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{4}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[4]{}\Conid{Choose}\;\Varid{x}\;\Varid{y}\mathrel{=}\Conid{MinWith}\;(\Varid{const}\;\mathrm{0})\;[\mskip1.5mu \Varid{x},\Varid{y}\mskip1.5mu]{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+so \ensuremath{\Varid{x}\leftarrow\Conid{Choose}\;\Varid{x}\;\Varid{y}} and \ensuremath{\Varid{y}\leftarrow\Conid{Choose}\;\Varid{x}\;\Varid{y}}. Do we have
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[5]{}\Varid{double}\;(\Conid{Choose}\;\mathrm{1}\;\mathrm{2})\mathrel{=}\Conid{Choose}\;\mathrm{1}\;\mathrm{2}\mathbin{+}\Conid{Choose}\;\mathrm{1}\;\mathrm{2}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+where \ensuremath{\Varid{double}\;\Varid{x}\mathrel{=}\Varid{x}\mathbin{+}\Varid{x}}? The answer is no, because
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}c<{\hspost}@{}}%
+\column{BE}{@{}l@{}}%
+\column{3}{@{}>{\hspre}c<{\hspost}@{}}%
+\column{3E}{@{}l@{}}%
+\column{7}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{35}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[3]{}\hspace{1.5em}{}\<[3E]%
+\>[7]{}\Varid{x}\leftarrow\Varid{double}\;(\Conid{Choose}\;\mathrm{1}\;\mathrm{2}){}\<[E]%
+\\
+\>[B]{}\Leftrightarrow{}\<[BE]%
+\>[7]{}\exists \Varid{y}\hsexists \hsdot{\cdot }{:}\Varid{y}\leftarrow\Conid{Choose}\;\mathrm{1}\;\mathrm{2}{}\<[35]%
+\>[35]{}\mathrel{\wedge}\Varid{x}\mathrel{=}\Varid{double}\;\Varid{y}{}\<[E]%
+\\
+\>[B]{}\Leftrightarrow{}\<[BE]%
+\>[7]{}\Varid{x}\mathrel{=}\mathrm{2}\mathrel{\vee}\Varid{x}\mathrel{=}\mathrm{4}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+while
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}c<{\hspost}@{}}%
+\column{BE}{@{}l@{}}%
+\column{3}{@{}>{\hspre}c<{\hspost}@{}}%
+\column{3E}{@{}l@{}}%
+\column{7}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[3]{}\hspace{1.5em}{}\<[3E]%
+\>[7]{}\Varid{x}\leftarrow\Conid{Choose}\;\mathrm{1}\;\mathrm{2}\mathbin{+}\Conid{Choose}\;\mathrm{1}\;\mathrm{2}{}\<[E]%
+\\
+\>[B]{}\Leftrightarrow{}\<[BE]%
+\>[7]{}\exists \Varid{y}\hsexists ,\Varid{z}\hsdot{\cdot }{:}\Varid{y}\leftarrow\Conid{Choose}\;\mathrm{1}\;\mathrm{2}\mathrel{\wedge}\Varid{z}\leftarrow\Conid{Choose}\;\mathrm{1}\;\mathrm{2}\mathrel{\wedge}\Varid{x}\mathrel{=}\Varid{y}\mathbin{+}\Varid{z}{}\<[E]%
+\\
+\>[B]{}\Leftrightarrow{}\<[BE]%
+\>[7]{}\Varid{x}\mathrel{=}\mathrm{2}\mathrel{\vee}\Varid{x}\mathrel{=}\mathrm{3}\mathrel{\vee}\Varid{x}\mathrel{==}\mathrm{4}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+We have only that \ensuremath{\Varid{double}\;(\Conid{Choose}\;\Varid{x}\;\Varid{y})\leftarrow\Conid{Choose}\;\Varid{x}\;\Varid{y}\mathbin{+}\Conid{Choose}\;\Varid{x}\;\Varid{y}}.
+
+For the third example, it is easy enough to show, for all \ensuremath{\Varid{f}_{1}}, \ensuremath{\Varid{f}_{2}} and \ensuremath{\Varid{x}} that
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[5]{}\Conid{Choose}\;(\Varid{f}_{1}\;\Varid{x})\;(\Varid{f}_{2}\;\Varid{x})\mathrel{=}\Conid{Choose}\;\Varid{f}_{1}\;\Varid{f}_{2}\;\Varid{x}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+but it would be wrong to conclude by \ensuremath{\eta } conversion that
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[5]{}\lambda \hslambda \Varid{x}\hsarrow{\rightarrow }{\mathpunct{.}}\Conid{Choose}\;(\Varid{f}_{1}\;\Varid{x})\;(\Varid{f}_{2}\;\Varid{x})\mathrel{=}\Conid{Choose}\;\Varid{f}_{1}\;\Varid{f}_{2}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+We have 
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{37}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[5]{}\Varid{f}\leftarrow\lambda \hslambda \Varid{x}\hsarrow{\rightarrow }{\mathpunct{.}}\Conid{Choose}\;(\Varid{f}_{1}\;\Varid{x})\;(\Varid{f}_{2}\;\Varid{x}){}\<[37]%
+\>[37]{}\Leftrightarrow\forall \Varid{x}\hsforall \mathbin{:}\Varid{f}\;\Varid{x}\mathrel{=}\Varid{f}_{1}\;\Varid{x}\mathrel{\vee}\Varid{f}\;\Varid{x}\mathrel{=}\Varid{f}_{2}\;\Varid{x}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+However, 
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[5]{}\Varid{f}\leftarrow\Conid{Choose}\;\Varid{f}_{1}\;\Varid{f}_{2}\Leftrightarrow(\forall \Varid{x}\hsforall \mathbin{:}\Varid{f}\;\Varid{x}\mathrel{=}\Varid{f}_{1}\;\Varid{x})\mathrel{\vee}(\forall \Varid{x}\hsforall \mathbin{:}\Varid{f}\;\Varid{x}\mathrel{=}\Varid{f}_{2}\;\Varid{x}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+The results are different. The \ensuremath{\eta } rule, namely \ensuremath{\Varid{f}\mathrel{=}\lambda \hslambda \Varid{x}\hsarrow{\rightarrow }{\mathpunct{.}}\Varid{f}\;\Varid{x}},
+does not hold if \ensuremath{\Varid{f}} is a nondeterministic function such as \ensuremath{\Conid{Choose}\;\Varid{f}_{1}\;\Varid{f}_{2}}. 
+
+What else do we want? Certainly, we want a refinement version of the fusion law
+for \ensuremath{\Varid{foldr}}, namely that over finite lists we have
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{foldr}\;\Varid{f}\;\Varid{e'}\;\Varid{xs}\leftarrow\Conid{H}\;(\Varid{foldr}\;\Varid{g}\;\Varid{e}\;\Varid{xs}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+for all finite lists \ensuremath{\Varid{xs}} provided that \ensuremath{\Varid{e'}\leftarrow\Conid{H}\;\Varid{e}} and \ensuremath{\Varid{f}\;\Varid{x}\;(\Conid{H}\;\Varid{y})\leftarrow\Conid{H}\;(\Varid{g}\;\Varid{x}\;\Varid{y})}.
+Here is the proof of the fusion law. The base case is immediate and the 
+induction step is as follows:
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}c<{\hspost}@{}}%
+\column{BE}{@{}l@{}}%
+\column{3}{@{}>{\hspre}c<{\hspost}@{}}%
+\column{3E}{@{}l@{}}%
+\column{7}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{9}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[3]{}\hspace{1.5em}{}\<[3E]%
+\>[7]{}\Varid{foldr}\;\Varid{f}\;\Varid{e'}\;(\Varid{x}\mathbin{:}\Varid{xs}){}\<[E]%
+\\
+\>[B]{}\mathrel{=}{}\<[BE]%
+\>[9]{}\mbox{\commentbegin  definition of \ensuremath{\Varid{foldr}}  \commentend}{}\<[E]%
+\\
+\>[B]{}\hsindent{7}{}\<[7]%
+\>[7]{}\Varid{f}\;\Varid{x}\;(\Varid{foldr}\;\Varid{f}\;\Varid{e'}\;\Varid{xs}){}\<[E]%
+\\
+\>[B]{}\leftarrow{}\<[BE]%
+\>[9]{}\mbox{\commentbegin  induction, and monotonicity of refinement (see below)  \commentend}{}\<[E]%
+\\
+\>[B]{}\hsindent{7}{}\<[7]%
+\>[7]{}\Varid{f}\;\Varid{x}\;(\Conid{H}\;(\Varid{foldr}\;\Varid{g}\;\Varid{e}\;\Varid{xs})){}\<[E]%
+\\
+\>[B]{}\leftarrow{}\<[BE]%
+\>[9]{}\mbox{\commentbegin  fusion condition, and monotonicity of refinement  \commentend}{}\<[E]%
+\\
+\>[B]{}\hsindent{7}{}\<[7]%
+\>[7]{}\Conid{H}\;(\Varid{g}\;\Varid{x}\;(\Varid{foldr}\;\Varid{g}\;\Varid{e}\;\Varid{xs})){}\<[E]%
+\\
+\>[B]{}\mathrel{=}{}\<[BE]%
+\>[9]{}\mbox{\commentbegin  definition of \ensuremath{\Varid{foldr}}  \commentend}{}\<[E]%
+\\
+\>[B]{}\hsindent{7}{}\<[7]%
+\>[7]{}\Conid{H}\;(\Varid{foldr}\;\Varid{g}\;\Varid{e}\;(\Varid{x}\mathbin{:}\Varid{xs})){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+The appeal to the monotonicity of refinement is the assertion
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{11}{@{}>{\hspre}c<{\hspost}@{}}%
+\column{11E}{@{}l@{}}%
+\column{14}{@{}>{\hspre}c<{\hspost}@{}}%
+\column{14E}{@{}l@{}}%
+\column{19}{@{}>{\hspre}c<{\hspost}@{}}%
+\column{19E}{@{}l@{}}%
+\column{22}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Conid{E}_{1}\leftarrow\Conid{E}_{2}{}\<[11]%
+\>[11]{}\enspace{}\<[11E]%
+\>[14]{}\Rightarrow{}\<[14E]%
+\>[19]{}\enspace{}\<[19E]%
+\>[22]{}\Conid{F}\;\Conid{E}_{1}\leftarrow\Conid{F}\;\Conid{E}_{2}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+So this condition is also required to hold.
+
+Let us see what else we might need by redoing the calculation of the greedy 
+algorithm for \ensuremath{\Varid{mcc}}. This time we start with the specification
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{mcc}\leftarrow\Conid{MinWith}\;\Varid{cost}\hsdot{\cdot }{:}\Varid{candidates}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+For the fusion condition we reason:
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}c<{\hspost}@{}}%
+\column{BE}{@{}l@{}}%
+\column{3}{@{}>{\hspre}c<{\hspost}@{}}%
+\column{3E}{@{}l@{}}%
+\column{7}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{9}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{42}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[3]{}\hspace{1.5em}{}\<[3E]%
+\>[7]{}\Conid{MinWith}\;\Varid{cost}\;(\Varid{step}\;\Varid{x}\;\Varid{cs}){}\<[E]%
+\\
+\>[B]{}\mathrel{=}{}\<[BE]%
+\>[9]{}\mbox{\commentbegin  definition of \ensuremath{\Varid{step}}  \commentend}{}\<[E]%
+\\
+\>[B]{}\hsindent{7}{}\<[7]%
+\>[7]{}\Conid{MinWith}\;\Varid{cost}\;(\Varid{concatMap}\;(\Varid{additions}\;\Varid{x})\;\Varid{cs}){}\<[E]%
+\\
+\>[B]{}\mathrel{=}{}\<[BE]%
+\>[9]{}\mbox{\commentbegin  distributive law  \commentend}{}\<[E]%
+\\
+\>[B]{}\hsindent{7}{}\<[7]%
+\>[7]{}\Conid{MinWith}\;\Varid{cost}\;(\Varid{map}\;(\Conid{MinWith}\;\Varid{cost}\hsdot{\cdot }{:}{}\<[42]%
+\>[42]{}\Varid{additions}\;\Varid{x})\;\Varid{cs}){}\<[E]%
+\\
+\>[B]{}\rightarrow{}\<[BE]%
+\>[9]{}\mbox{\commentbegin  suppose \ensuremath{\Varid{add}\;\Varid{x}\leftarrow\Conid{MinWith}\;\Varid{cost}\hsdot{\cdot }{:}\Varid{additions}\;\Varid{x}}  \commentend}{}\<[E]%
+\\
+\>[B]{}\hsindent{7}{}\<[7]%
+\>[7]{}\Conid{MinWith}\;\Varid{cost}\;(\Varid{map}\;(\Varid{add}\;\Varid{x})\;\Varid{cs}){}\<[E]%
+\\
+\>[B]{}\rightarrow{}\<[BE]%
+\>[9]{}\mbox{\commentbegin  greedy condition (see below)  \commentend}{}\<[E]%
+\\
+\>[B]{}\hsindent{7}{}\<[7]%
+\>[7]{}\Varid{add}\;\Varid{x}\;(\Conid{MinWith}\;\Varid{cost}\;\Varid{cs}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+We write \ensuremath{\Conid{E}_{1}\rightarrow\Conid{E}_{2}} as an alternative to \ensuremath{\Conid{E}_{2}\leftarrow\Conid{E}_{1}}.
+The second step makes use of the distributive law, and the third step
+is an instance of the monotonicity of refinement.
+
+Let us now revisit the greedy condition. This time we only have to show
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[5]{}\Varid{add}\;\Varid{x}\;(\Conid{MinWith}\;\Varid{cost}\;\Varid{cs})\leftarrow\Conid{MinWith}\;\Varid{cost}\;(\Varid{map}\;(\Varid{add}\;\Varid{x})\;\Varid{cs}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+where \ensuremath{\Varid{add}\;\Varid{x}\leftarrow\Conid{MinWith}\;\Varid{cost}\hsdot{\cdot }{:}\Varid{additions}\;\Varid{x}}.
+Unlike the previous version, this claim follows from the monotonicity 
+condition (\ref{mono2}). To spell out the details, suppose \ensuremath{\Varid{c}} is a candidate in 
+\ensuremath{\Varid{cs}} with minimum cost. We have only to show that 
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[5]{}\Varid{add}\;\Varid{x}\;\Varid{c}\leftarrow\Conid{MinWith}\;\Varid{cost}\;(\Varid{map}\;(\Varid{add}\;\Varid{x})\;\Varid{cs}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+Equivalently, that
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[5]{}\Varid{cost}\;(\Varid{add}\;\Varid{x}\;\Varid{c})\leq \Varid{cost}\;(\Varid{add}\;\Varid{x}\;\Varid{c'}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+for all candidates \ensuremath{\Varid{c'}} on \ensuremath{\Varid{cs}}. But this follows from (\ref{mono2}) and 
+the fact that \ensuremath{\Varid{cost}\;\Varid{c}\leq \Varid{cost}\;\Varid{c'}}.
+
+Summarising, we can now define \ensuremath{\Varid{mcc}\mathrel{=}\Varid{foldr}\;\Varid{add}\;\Varid{c}_{0}} provided (\ref{mono2}) holds
+for a suitable refinement of \ensuremath{\Varid{add}}. Unlike the previous calculation, the new one
+is sufficient to deal with most examples of greedy algorithms, at least when
+candidate generation is expressed in terms of \ensuremath{\Varid{foldr}}.
+
+We have concentrated on greedy algorithms and the function \ensuremath{\Conid{MinWith}}, but there is 
+another nondeterministic function \ensuremath{\Conid{ThinBy}}, which is needed in the study of thinning 
+algorithms. Not every optimisation problem can be solved by a greedy
+algorithm, and between the extremes of maintaining just one candidate at each step and
+maintaining all possible candidates, there is the option of keeping only a subset of
+candidates in play. That is where \ensuremath{\Conid{ThinBy}} comes in. It is a function with type
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[5]{}\Conid{ThinBy}\mathbin{::}(\Varid{a}\hsarrow{\rightarrow }{\mathpunct{.}}\Varid{a}\hsarrow{\rightarrow }{\mathpunct{.}}\Conid{Bool})\hsarrow{\rightarrow }{\mathpunct{.}}[\mskip1.5mu \Varid{a}\mskip1.5mu]\hsarrow{\rightarrow }{\mathpunct{.}}[\mskip1.5mu \Varid{a}\mskip1.5mu]{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+Thus \ensuremath{\Conid{ThinBy}\;(\ll)\;\Varid{xs}} takes a comparison function \ensuremath{\ll} and a list \ensuremath{\Varid{xs}} as arguments
+and returns a subsequence \ensuremath{\Varid{ys}} of \ensuremath{\Varid{xs}} such that for all \ensuremath{\Varid{x}} in \ensuremath{\Varid{xs}} there is a \ensuremath{\Varid{y}}
+in \ensuremath{\Varid{ys}} with \ensuremath{\Varid{y}\ll\Varid{x}}. The subsequence is not specified further, so \ensuremath{\Conid{ThinBy}} is
+nondeterministic. We mention \ensuremath{\Conid{ThinBy}} to show that there is more than one nondeterministic
+function of interest in the study of deriving algorithms from specifications.
+
+The task now before us is to find a suitable axiomatisation for a theory of
+refinement and to give a model to show the soundness and consistency of the axioms. 
+Essentially, this axiomatisation is the one proposed in \cite{m&b,m&b2} but simplified by
+leaving out some details inessential for our purposes.
+
+\section{An axiomatic basis}\label{sec:calc}
+
+
+
+Rather than deal with specific nondeterministic functions such as \ensuremath{\Conid{MinWith}}
+and \ensuremath{\Conid{ThinBy}}, we can phrase the required rules in terms of a binary choice 
+operator \ensuremath{(\mathbin{\sqcap})}. Thus,
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[5]{}\Conid{E}_{1}\mathbin{\sqcap}\Conid{E}_{2}\mathrel{=}\Conid{MinWith}\;(\Varid{const}\;\mathrm{0})\;[\mskip1.5mu \Conid{E}_{1},\Conid{E}_{2}\mskip1.5mu]{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+We also have
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{19}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[5]{}\Conid{MinWith}\;\Varid{f}\;\Varid{xs}{}\<[19]%
+\>[19]{}\mathrel{=}\Varid{foldr1}\;(\mathbin{\sqcap})\;[\mskip1.5mu \Varid{x}\mid \Varid{x}\leftarrow \Varid{xs},\Varid{and}\;[\mskip1.5mu \Varid{f}\;\Varid{x}\leq \Varid{f}\;\Varid{y}\mid \Varid{y}\leftarrow \Varid{xs}\mskip1.5mu]\mskip1.5mu]{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+so \ensuremath{\Conid{MinWith}} can be defined in terms of \ensuremath{(\mathbin{\sqcap})}. Below we write \ensuremath{\sqcap /} for \ensuremath{\Varid{foldr1}\;(\mathbin{\sqcap})}.
+Thus \ensuremath{\sqcap /} takes a finite, nonempty list of arguments and returns an arbitrary element
+of the list.
+
+To formulate the axioms we need a language of types and expressions, and we
+choose the simply-typed lambda calculus. Types are given by the grammar
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[5]{}\Conid{T}\mathbin{::=}\Conid{B}\mid \Conid{T}\hsarrow{\rightarrow }{\mathpunct{.}}\Conid{T}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+\ensuremath{\Conid{B}} consists of the base types, such as \ensuremath{\Conid{Int}} and \ensuremath{\Conid{Bool}}. We could 
+have included pair types explicitly, as is done in \cite{m&b}, but for present purposes 
+it is simpler to omit them. Expressions are given by the grammar
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{6}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{21}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[6]{}\Conid{E}\mathbin{::=}\Conid{C}\mid \Conid{V}\mid {}\<[21]%
+\>[21]{}\sqcap /\;[\mskip1.5mu \Conid{E}_{1},\Conid{E}_{2},\mathbin{...},\Varid{E}_n\mskip1.5mu]\mid \Conid{E}\;\Conid{E}\mid \lambda \hslambda \Conid{V}\mathbin{:}\Conid{T}\hsarrow{\rightarrow }{\mathpunct{.}}\Conid{E}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+where \ensuremath{\Varid{n}\mathbin{>}\mathrm{0}} and each of \ensuremath{\Conid{E}_{1},\Conid{E}_{2},\mathbin{...},\Varid{E}_n} are expressions of the same type. We omit the type of the bound variable in a $\lambda$-abstraction if it can be inferred, and we 
+write \ensuremath{\Conid{E}_{1}\mathbin{\sqcap}\Conid{E}_{2}} for \ensuremath{\sqcap /\;[\mskip1.5mu \Conid{E}_{1},\Conid{E}_{2}\mskip1.5mu]}.
+Included in the constants \ensuremath{\Conid{C}} are constant 
+functions such as the addition function \ensuremath{\mathbin{+}} on integers (written infix as usual) and integer literals \ensuremath{\mathrm{0},\mathrm{1},\mathbin{-}\mathrm{1},\mathbin{...}}. The typing rules are 
+standard; in particular, \ensuremath{\sqcap /\;[\mskip1.5mu \Conid{E}_{1},\Conid{E}_{2},\mathbin{...},\Varid{E}_n\mskip1.5mu]}, has type \ensuremath{\Conid{T}} if all \ensuremath{\Varid{E}_i} do.
+
+%%\begin{enumerate}
+%%\item A constant, or a constant function applied only to pure expressions.
+%%\item A variable.
+%%\item A list of pure expressions.
+%%\item An application of a lambda abstraction with a pure body to a pure
+%%      expression. Equivalently, if the expression can be converted into
+%%      a pure expression by |beta|-reduction (see below).
+%%\item A lambda abstraction, whose body may or may not be pure.
+%%\end{enumerate} 
+%%For example, |2| is a pure expression and so is |(+) E1 E2| provided both |E1| and |E2| are. 
+%%However, |id ? const 3| and |2 ? 2| are both impure, even though |2 ? 2| describes a single 
+%%value. The lambda expression |\y -> 1?y| is pure but applying it to any expression gives an 
+%%impure result. Finally, |(\x -> \y -> x?y)1| is pure, and equivalent by |beta|-reduction 
+%%to the pure expression |\y ->1?y|.
+%%FR start
+\def\pure#1{\mathit{pure}(#1)}
+Boolean formulas are formed using equality \ensuremath{\Conid{E}_{1}\mathrel{=}\Conid{E}_{2}} and refinement \ensuremath{\Conid{E}_{1}\leftarrow\Conid{E}_{2}} of expressions 
+as well as universal and existential quantification and the propositional connectives in the 
+usual way.
+We use the same type of Booleans both for programs and for formulas about them, but only some Boolean expressions are practical in programs (e.g.,  propositional connectives and equality at base types).
+Additionally, in order to state the axioms, we need a predicate $\pure{E}$ to 
+distinguish a subclass of expressions, called \emph{pure} expressions. The intention is to 
+define a semantics in which a pure expression denotes a single value, except for lambda 
+abstractions with impure bodies, which denote a set of functions.
+We add rules such that $\pure{E}$ holds if \ensuremath{\Conid{E}} is
+\begin{itemize}
+\item a constant \ensuremath{\Conid{C}} applied to any number of pure arguments (including \ensuremath{\Conid{C}} itself if 
+there are no arguments),
+\item a lambda abstraction (independent of whether its body is pure).
+\end{itemize} 
+Like any predicate symbol, purity is closed under equality, i.e., if \ensuremath{\Conid{E}_{1}} is pure and we can prove \ensuremath{\Conid{E}_{1}\mathrel{=}\Conid{E}_{2}}, then so is \ensuremath{\Conid{E}_{2}}.
+For example, \ensuremath{\mathrm{2}} and \ensuremath{\Conid{E}_{1}\mathbin{+}\Conid{E}_{2}} for pure \ensuremath{\Conid{E}_{1}} 
+and \ensuremath{\Conid{E}_{2}} are pure because \ensuremath{\mathrm{2}} and \ensuremath{\mathbin{+}} are constants. Also \ensuremath{\lambda \hslambda \Varid{y}\hsarrow{\rightarrow }{\mathpunct{.}}\mathrm{1}\mathbin{\sqcap}\Varid{y}} is pure because it is 
+a lambda abstraction, and \ensuremath{(\lambda \hslambda \Varid{x}\hsarrow{\rightarrow }{\mathpunct{.}}\lambda \hslambda \Varid{y}\hsarrow{\rightarrow }{\mathpunct{.}}\Varid{x}\mathbin{\sqcap}\Varid{y})\;\mathrm{1}} is pure because it is equal by \ensuremath{\beta }-reduction
+(see below) to the former. Furthermore, \ensuremath{\mathrm{2}\mathbin{\sqcap}\mathrm{2}} is pure because it is equal to \ensuremath{\mathrm{2}} (using the 
+axioms given below), but \ensuremath{(\lambda \hslambda \Varid{y}\hsarrow{\rightarrow }{\mathpunct{.}}\mathrm{1}\mathbin{\sqcap}\Varid{y})\;\mathrm{2}} and \ensuremath{\mathrm{1}\mathbin{\sqcap}\mathrm{2}} are both impure.
+In what follows we use 
+lowercase letters for pure expressions and uppercase letters for possibly impure expressions. 
+%%FR end
+
+
+The reason for introducing pure expressions is in the statement of our 
+first two axioms, the rules of \ensuremath{\beta } and \ensuremath{\eta } conversion. The \ensuremath{\beta } rule is that if 
+\ensuremath{\Varid{e}} is a pure expression, then
+\begin{eqnarray}
+\label{beta}
+\ensuremath{(\lambda \hslambda \Varid{x}\hsarrow{\rightarrow }{\mathpunct{.}}\Conid{E})\;\Varid{e}} &=& \ensuremath{\Conid{E}\;(\Varid{x}\mathbin{:=}\Varid{e})}
+\end{eqnarray}
+where \ensuremath{\Conid{E}\;(\Varid{x}\mathbin{:=}\Varid{e})} denotes the expression \ensuremath{\Conid{E}} with all free occurrences of \ensuremath{\Varid{x}} replaced by \ensuremath{\Varid{e}}.
+%% FR
+Intuitively, the purity restriction to \ensuremath{\beta }-reduction makes sense because the bound variable 
+of the lambda abstraction only ranges over values and therefore may only be substituted with 
+pure expressions.
+%%In particular, since variables are pure we have |E = (\x -> E) x|.
+
+The \ensuremath{\eta } rule asserts that if \ensuremath{\Varid{f}} is a pure function, then
+\begin{eqnarray}
+\label{eta}
+\ensuremath{\Varid{f}}          &=& \ensuremath{\lambda \hslambda \Varid{x}\hsarrow{\rightarrow }{\mathpunct{.}}\Varid{f}\;\Varid{x}}
+\end{eqnarray}
+%%FR
+The purity restriction to \ensuremath{\eta }-expansion makes sense because lambda-abstractions are 
+always pure and thus can never equal an impure function.
+
+%%FR start
+\def\rul#1#2{\frac{#1}{#2}}
+\def\tb{\;\;\;\;}
+\def\vd{\;\vdash\;}
+
+Our notion of purity corresponds to the \emph{proper} expressions of \cite{m&b} except that 
+we avoid the axiom that variables are pure. Our first draft used that axiom, but we were unable 
+to formalise the calculus until we modified that aspect. The reason why the axiom is problematic 
+is that it forces a distinction between meta-variables (which may be impure) and object variables
+(which must be pure). That precludes using higher-order abstract syntax when representing and 
+reasoning about the language, e.g., in a logical framework like \cite{lf}, and highly complicates 
+the substitution properties of the language.
+However, just like in \cite{m&b}, our binders will range only over values, which our calculus 
+captures by adding a purity assumption for the bound variable whenever traversing into the body 
+of a binder. For example, the $\xi$ rule for equality reasoning under a lambda becomes:
+\[\rul{\pure{x}\vd E=F}{\vd \lambda x . E = \lambda x .F}\]
+%%FR end
+
+As we will see below, without the above purity restrictions we could derive a contradiction 
+with the remaining five axioms, which are as follows:
+\begin{eqnarray}
+\label{refines}
+   \ensuremath{\Conid{E}_{1}\leftarrow\Conid{E}_{2}}     &\ensuremath{\Leftrightarrow}& \ensuremath{\forall \Varid{x}\hsforall \hsdot{\cdot }{:}\Varid{x}\leftarrow\Conid{E}_{1}\Rightarrow\Varid{x}\leftarrow\Conid{E}_{2}}\\
+\label{equality}
+   \ensuremath{\Conid{E}_{1}\mathrel{=}\Conid{E}_{2}}      &\ensuremath{\Leftrightarrow}& \ensuremath{\forall \Varid{x}\hsforall \hsdot{\cdot }{:}\Varid{x}\leftarrow\Conid{E}_{1}\Leftrightarrow\Varid{x}\leftarrow\Conid{E}_{2}}\\
+%%FR reformulate the choice rule to avoid the dependency on natural numbers and lists
+\label{choice}
+   \ensuremath{\Varid{x}\leftarrow\sqcap /\;[\mskip1.5mu \Conid{E}_{1},\Conid{E}_{2},\mathbin{...},\Varid{E}_n\mskip1.5mu]} &\ensuremath{\Leftrightarrow}& \ensuremath{\Varid{x}\leftarrow\Conid{E}_{1}\;\mathbin{\,\vee\,}\;\Varid{x}\leftarrow\Conid{E}_{2}\;\mathbin{\,\vee\,}\mathbin{...}\mathbin{\,\vee\,}\;\Varid{x}\leftarrow\Varid{E}_n} \\
+\label{apply}
+   \ensuremath{\Varid{x}\leftarrow\Conid{F}\;\Conid{E}}     &\ensuremath{\Leftrightarrow}& \ensuremath{\exists \Varid{f}\hsexists ,\Varid{e}\hsdot{\cdot }{:}\Varid{f}\leftarrow\Conid{F}\mathrel{\wedge}\Varid{e}\leftarrow\Conid{E}\mathrel{\wedge}\Varid{x}\leftarrow\Varid{f}\;\Varid{e}}\\ 
+\label{lambda}
+   \ensuremath{\Varid{f}\leftarrow\lambda \hslambda \Varid{x}\hsarrow{\rightarrow }{\mathpunct{.}}\Conid{E}} &\ensuremath{\Leftrightarrow}& \ensuremath{\forall \Varid{x}\hsforall \hsdot{\cdot }{:}\Varid{f}\;\Varid{x}\leftarrow\Conid{E}}
+\end{eqnarray} 
+Recall that free lower case variables range over pure expressions only, i.e., the free 
+variables \ensuremath{\Varid{x}} and \ensuremath{\Varid{f}} are assumed pure.
+
+From (\ref{refines}) and (\ref{equality}) we obtain that \ensuremath{(\leftarrow)} is reflexive, transitive 
+and anti-symmetric. From (\ref{choice}) we obtain that \ensuremath{(\mathbin{\sqcap})} is associative, commutative 
+and idempotent. Axioms (\ref{choice}) and (\ref{apply}) are sufficient to establish
+\begin{eqnarray}
+\label{distrib}
+    \ensuremath{\Conid{F}\;(\sqcap /\;[\mskip1.5mu \Conid{E}_{1},\Conid{E}_{2},\mathbin{...},\Varid{E}_n\mskip1.5mu])\mathrel{=}\sqcap /\;[\mskip1.5mu \Conid{F}\;\Conid{E}_{1},\Conid{F}\;\Conid{E}_{2},\mathbin{...},\Conid{F}\;\Varid{E}_n\mskip1.5mu]}
+\end{eqnarray}
+Here is the proof:
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}c<{\hspost}@{}}%
+\column{BE}{@{}l@{}}%
+\column{6}{@{}>{\hspre}c<{\hspost}@{}}%
+\column{6E}{@{}l@{}}%
+\column{10}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{12}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{16}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{39}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[6]{}\hspace{1.5em}{}\<[6E]%
+\>[10]{}\Varid{x}\leftarrow\Conid{F}\;(\sqcap /\;[\mskip1.5mu \Conid{E}_{1},\Conid{E}_{2},\mathbin{...},\Varid{E}_n\mskip1.5mu]){}\<[E]%
+\\
+\>[B]{}\Leftrightarrow{}\<[BE]%
+\>[12]{}\mbox{\commentbegin  (\ref{apply})  \commentend}{}\<[E]%
+\\
+\>[B]{}\hsindent{10}{}\<[10]%
+\>[10]{}\exists \Varid{f}\hsexists ,\Varid{e}\hsdot{\cdot }{:}\Varid{f}\leftarrow\Conid{F}\mathrel{\wedge}\Varid{e}\leftarrow{}\<[39]%
+\>[39]{}\sqcap /\;[\mskip1.5mu \Conid{E}_{1},\Conid{E}_{2},\mathbin{...},\Varid{E}_n\mskip1.5mu]\mathrel{\wedge}\Varid{x}\leftarrow\Varid{f}\;\Varid{e}{}\<[E]%
+\\
+\>[B]{}\Leftrightarrow{}\<[BE]%
+\>[12]{}\mbox{\commentbegin  (\ref{choice})  \commentend}{}\<[E]%
+\\
+\>[B]{}\hsindent{10}{}\<[10]%
+\>[10]{}\exists \Varid{i}\hsexists ,\Varid{f},\Varid{e}\hsdot{\cdot }{:}\Varid{f}\leftarrow\Conid{F}\mathrel{\wedge}\Varid{e}\leftarrow\Varid{E}_i\mathrel{\wedge}\Varid{x}\leftarrow\Varid{f}\;\Varid{e}{}\<[E]%
+\\
+\>[B]{}\Leftrightarrow{}\<[BE]%
+\>[12]{}\mbox{\commentbegin  (\ref{apply})  \commentend}{}\<[E]%
+\\
+\>[B]{}\hsindent{10}{}\<[10]%
+\>[10]{}\exists \Varid{i}\hsexists \hsdot{\cdot }{:}\Varid{x}\leftarrow\Conid{F}\;\Varid{E}_i{}\<[E]%
+\\
+\>[B]{}\Leftrightarrow{}\<[BE]%
+\>[12]{}\mbox{\commentbegin  (\ref{choice})  \commentend}{}\<[E]%
+\\
+\>[B]{}\hsindent{10}{}\<[10]%
+\>[10]{}\Varid{x}\leftarrow{}\<[16]%
+\>[16]{}\sqcap /\;[\mskip1.5mu \Conid{F}\;\Conid{E}_{1},\Conid{F}\;\Conid{E}_{2},\mathbin{...},\Conid{F}\;\Varid{E}_n\mskip1.5mu]{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+It follows from (\ref{distrib}) and (\ref{beta}) that
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[5]{}(\lambda \hslambda \Varid{x}\hsarrow{\rightarrow }{\mathpunct{.}}\Varid{x}\mathbin{+}\Varid{x})\;(\mathrm{1}\mathbin{\sqcap}\mathrm{2})\mathrel{=}(\lambda \hslambda \Varid{x}\hsarrow{\rightarrow }{\mathpunct{.}}\Varid{x}\mathbin{+}\Varid{x})\;\mathrm{1}\mathbin{\sqcap}(\lambda \hslambda \Varid{x}\hsarrow{\rightarrow }{\mathpunct{.}}\Varid{x}\mathbin{+}\Varid{x})\;\mathrm{2}\mathrel{=}\mathrm{2}\mathbin{\sqcap}\mathrm{4}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+If, however, (\ref{beta}) was allowed to hold for arbitrary expressions, then we
+would have
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[5]{}(\lambda \hslambda \Varid{x}\hsarrow{\rightarrow }{\mathpunct{.}}\Varid{x}\mathbin{+}\Varid{x})\;(\mathrm{1}\mathbin{\sqcap}\mathrm{2})\mathrel{=}(\mathrm{1}\mathbin{\sqcap}\mathrm{2})\mathbin{+}(\mathrm{1}\mathbin{\sqcap}\mathrm{2})\mathrel{=}\mathrm{2}\mathbin{\sqcap}\mathrm{3}\mathbin{\sqcap}\mathrm{4}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+which is a contradiction.
+
+
+We can also show, for example, that \ensuremath{\lambda \hslambda \Varid{x}\hsarrow{\rightarrow }{\mathpunct{.}}\Varid{x}\mathbin{\sqcap}\mathrm{3}} and \ensuremath{\Varid{id}\mathbin{\sqcap}\Varid{const}\;\mathrm{3}} 
+are different functions even though they are extensionally the same:
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[5]{}(\lambda \hslambda \Varid{x}\hsarrow{\rightarrow }{\mathpunct{.}}\Varid{x}\mathbin{\sqcap}\mathrm{3})\;\Varid{x}\mathrel{=}\Varid{x}\mathbin{\sqcap}\mathrm{3}\mathrel{=}(\Varid{id}\mathbin{\sqcap}\Varid{const}\;\mathrm{3})\;\Varid{x}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+Consider the function \ensuremath{\Varid{h}\mathrel{=}\lambda \hslambda \Varid{f}\hsarrow{\rightarrow }{\mathpunct{.}}\Varid{f}\;\mathrm{1}\mathbin{+}\Varid{f}\;\mathrm{2}}. We have by \ensuremath{\beta } reduction
+that
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[5]{}\Varid{h}\;(\lambda \hslambda \Varid{x}\hsarrow{\rightarrow }{\mathpunct{.}}\Varid{x}\mathbin{\sqcap}\mathrm{3})\mathrel{=}(\lambda \hslambda \Varid{x}\hsarrow{\rightarrow }{\mathpunct{.}}\Varid{x}\mathbin{\sqcap}\mathrm{3})\;\mathrm{1}\mathbin{+}(\lambda \hslambda \Varid{x}\hsarrow{\rightarrow }{\mathpunct{.}}\Varid{x}\mathbin{\sqcap}\mathrm{3})\;\mathrm{2}\mathrel{=}(\mathrm{1}\mathbin{\sqcap}\mathrm{3})\mathbin{+}(\mathrm{2}\mathbin{\sqcap}\mathrm{3})\mathrel{=}\mathrm{3}\mathbin{\sqcap}\mathrm{4}\mathbin{\sqcap}\mathrm{5}\mathbin{\sqcap}\mathrm{6}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+while, on account of (\ref{distrib}), we have
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{46}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[5]{}\Varid{h}\;(\Varid{id}\mathbin{\sqcap}\Varid{const}\;\mathrm{3})\mathrel{=}\Varid{h}\;\Varid{id}\mathbin{\sqcap}\Varid{h}\;(\Varid{const}\;\mathrm{3})\mathrel{=}{}\<[46]%
+\>[46]{}(\mathrm{1}\mathbin{+}\mathrm{2})\mathbin{\sqcap}(\mathrm{3}\mathbin{+}\mathrm{3})\mathrel{=}\mathrm{3}\mathbin{\sqcap}\mathrm{6}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+Thus two nondeterministic functions can be extensionally equal without
+being the same function. That explains the restriction of the \ensuremath{\eta } rule to pure functions.
+Finally, (\ref{apply}) gives us that
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{16}{@{}>{\hspre}c<{\hspost}@{}}%
+\column{16E}{@{}l@{}}%
+\column{22}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[5]{}\Conid{G}_{1}\leftarrow\Conid{G}_{2}{}\<[16]%
+\>[16]{}\Rightarrow{}\<[16E]%
+\>[22]{}\Conid{F}\hsdot{\cdot }{:}\Conid{G}_{1}\leftarrow\Conid{F}\hsdot{\cdot }{:}\Conid{G}_{2}{}\<[E]%
+\\
+\>[5]{}\Conid{F}_{1}\leftarrow\Conid{F}_{2}{}\<[16]%
+\>[16]{}\Rightarrow{}\<[16E]%
+\>[22]{}\Conid{F}_{1}\hsdot{\cdot }{:}\Conid{G}\leftarrow\Conid{F}_{2}\hsdot{\cdot }{:}\Conid{G}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+where \ensuremath{(\hsdot{\cdot }{:})\mathrel{=}(\lambda \hslambda \Varid{f}\hsarrow{\rightarrow }{\mathpunct{.}}\lambda \hslambda \Varid{g}\hsarrow{\rightarrow }{\mathpunct{.}}\lambda \hslambda \Varid{x}\hsarrow{\rightarrow }{\mathpunct{.}}\Varid{f}\;(\Varid{g}\;\Varid{x}))}.
+
+%%FR start
+To complete the presentation of the calculus, we need to give the rules for the logical 
+operators used in the axioms. The rule for the propositional connectives are the standard ones
+and are omitted. But the rules for the quantifies are subtle because we have to ensure the 
+quantifiers range over pure expressions only. In single-conclusion natural deduction style, 
+these are
+\[\Large\begin{array}{ccc}
+\rul{\pure{x} \vd F}{\vd \forall x : F} & \tb\tb &
+\rul{\vd \forall x : F \tb \vd \pure{e}}{\vd F(x:=e)} \\[.2cm]
+\rul{\vd F(x:=e) \tb \vd\pure{e}}{\vd \exists x : F} & \tb\tb &
+\rul{\vd \exists x : F \tb \pure{x},\;F\vd G}{ \vd G}
+\end{array}\]
+Here $\pure{e}$ is the purity predicate, whose axioms are described above.
+%%FR end
+  
+
+\section{A denotational semantics}\label{sec:sem}
+
+%% FR I made more disruptive changes in this section than in the previous one; so changes are not marked anymore
+
+\def\sem#1{\llbracket#1\rrbracket}
+\def\seme#1#2{\llbracket#1\rrbracket_{#2}}
+\def\semr#1{\seme{#1}{\rho}}
+\def\sse{\subseteq}
+\def\rc#1{#1^\leftarrow}
+\def\PP#1{\mathbb{P^*}#1}
+\def\ZZ{\mathbb{Z}}
+\def\ov#1{\overline{#1}}
+
+
+To establish the consistency of the axiomatisation we give a denotational semantics for
+nondeterministic expressions. As the target language of our semantics, we use standard set 
+theory, with the notations $A\to B$ and $\lambda x\in A.b$ for functions (with $\in A$ omitted 
+if clear).
+
+\paragraph{Overview}
+The basic intuition of the interpretation function $\sem{-}$ is given in the following table where we write \ensuremath{\mathbb{P}^*\;\Conid{A}} for the set of non-empty subsets of \ensuremath{\Conid{A}}:
+
+\begin{center}
+\begin{tabular}{ll}
+\hline
+Syntax & Semantics \\
+\hline
+type $T$              & set $\sem{T}$ \\
+context declaring $x:T$ & environment mapping $\rho: x\mapsto \sem{T}$\\
+expression $E:T$      & non-empty subset $\sem{E}\in\PP\sem{T}$\\
+refinement \ensuremath{\Conid{E}_{1}\leftarrow\Conid{E}_{2}} & subset $\semr{E_1}\sse\semr{E_2}$\\
+function type \ensuremath{\Conid{S}\hsarrow{\rightarrow }{\mathpunct{.}}\Conid{T}}   & set--valued functions $\sem{S}\to\PP\sem{T}$ \\
+choice \ensuremath{\Conid{E}_{1}\mathbin{\sqcap}\Conid{E}_{2}}      & union $\semr{E_1}\cup\semr{E_2}$\\
+purity $\pure{E}$ for $E:T$  & $\semr{E}$ is generated by a single $v\in\sem{T}$\\
+\hline
+\end{tabular}
+\end{center}
+
+Thus, types denotes sets, and non-deterministic expressions denote sets of values.
+Functions are set-valued, and choice is simply union.
+
+Additionally, for each type $T$, we will define the operation
+\[\sem{T}\ni v\mapsto\rc{v}\in\PP\sem{T},\]
+which embeds the single (deterministic) values into the power set.
+We call it \emph{refinement closure} because $\rc{v}$ is the set of all values that we 
+want to allow as a refinement of $v$.
+This allows defining the refinement ordering $\leq_T$ on $\sem{T}$ by $v\leq _T w$ iff 
+$\rc{v}\sse \rc{w}$.
+While we will not need it in the sequel, it is helpful to define because for every expression $E:T$, the set $\sem{E}$ will be downward closed with respect to $\leq_T$.
+One could add an expression \ensuremath{\mathord{\perp}} as a value with no refinements other than itself, which
+denotes the empty set. But doing so would mean that \ensuremath{\mathord{\perp}} would be a refinement of every 
+expression, which we choose not to have. That explains the restriction to non-empty sets in 
+our semantics. Note that $\leq_T$ is not the same as the usual approximation ordering on 
+Haskell expressions of a given type with \ensuremath{\mathord{\perp}} as the least element.
+
+%%An expression |E| of type |T|
+%%is interpreted as an \emph{upclosed} subset of a semantic type |lb T rb|.
+%%By definition, a subset |S| of a partial order |(P,<=)| is upclosed if
+%%|S = S ua|, where the upclosure |S ua| of |S| is defined by
+%%\begin{spec}
+%%    S ua  =  osb p `elem` P  <.> exists s `elem` S : s <= p csb
+%%\end{spec}
+
+\paragraph{Choice and Refinement}
+We define 
+\[\semr{\sqcap/[E_1,...,E_n]} = \semr{E_1}\cup\ldots\cup\semr{E_n}\]
+This captures our intuition that a choice refines to any of its arguments, i.e., 
+it denotes all values denoted by any argument. This is tied to the intuition that the 
+refinement property corresponds to the subset condition on denotations.
+For example, \ensuremath{\Conid{E}_{1}\leftarrow\Conid{E}_{1}\mathbin{\sqcap}\Conid{E}_{2}} corresponds to $\semr{E_1}\sse\semr{E_1\sqcap E_2}$.
+
+Pure expressions $e:T$ cannot be properly refined. At base types, they are
+interpreted as singletons. For the general case, we have to relax this idea somewhat and require only $\semr{e}=\rc{v}$ for some $v\in\sem{T}$.
+
+\paragraph{Variables}
+As usual, expressions with free variables are interpreted relative to an environment $\rho$.
+Analogously to variables ranging over pure expressions, the environment maps every variable $x:T$ to a value $v\in\sem{T}$ (but not to a subset of $\sem{T}$ as one might expect).
+Consequently, the denotation of a variable is defined by applying the refinement closure
+ \[\semr{x}=\rc{\rho(x)}\]
+
+\paragraph{Base Types and Constants}
+The interpretation of base types is straightforward, and we define
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{17}{@{}>{\hspre}c<{\hspost}@{}}%
+\column{17E}{@{}l@{}}%
+\column{20}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[5]{}\llbracket\!\;\Conid{Int}\;\!\rrbracket{}\<[17]%
+\>[17]{}\mathrel{=}{}\<[17E]%
+\>[20]{}\mathbb{Z}{}\<[E]%
+\\
+\>[5]{}\llbracket\!\;\Conid{Bool}\;\!\rrbracket{}\<[17]%
+\>[17]{}\mathrel{=}{}\<[17E]%
+\>[20]{}\mathbb{B}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+Moreover, we define $\rc{v}=\{v\}$ for $v\in \sem{B}$ for every base type $B$.
+In particular, we have $v\leq_B w$ iff $v = w$. In other words, the refinement ordering
+on base types is \emph{flat}.
+
+We would like to interpret all constants \ensuremath{\Conid{C}} in this straightforward way as well, but that 
+is not as easy. In general, we assume that for every user-declared constant $C:T$, a denotation 
+$\ov{C}\in\sem{T}$ is provided. Then we define 
+\[\semr{C}=\rc{\ov{C}}.\]
+However, we cannot simply assume that $\ov{C}$ is the standard denotation that we would use 
+to interpret a deterministic type theory.
+For example, for \ensuremath{\mathbin{+:}\Conid{Int}\hsarrow{\rightarrow }{\mathpunct{.}}\Conid{Int}\hsarrow{\rightarrow }{\mathpunct{.}}\Conid{Int}}, we cannot define $\ov{+}$ as the usual addition $+_\ZZ:\ZZ\to\ZZ\to\ZZ$ because we need a value $\ov{+}:\ZZ\to\PP(\ZZ\to\PP\ZZ)$.
+
+For first-order constants, i.e., constants $C:B_1\to \ldots\to B_n\to B$ where $B$ and all $B_i$ are base types (e.g., the constant $+$), we can still lift the standard interpretation relatively easily:
+If $f:\sem{B_1}\to\ldots\to\sem{B_n}\to\sem{B}$ is the intended interpretation for $C$, we define
+\[\overline{C}:\sem{B_1}\to\PP(\sem{B_2}\to\ldots\to\PP(\sem{B_n}\to\PP\sem{B})\ldots)\]
+by
+\[\overline{C}=\lambda x_1.\{\lambda x_2.\ldots \{\lambda x_n.\{f \,x_1\,\ldots,\,x_n\}\}\ldots\}\]
+Because all $B_i$ are base types, this yields we have $\semr{C}=\rc{\overline{C}}=\{\overline{C}\}$.
+For $n=0$, this includes constants $C:B$, e.g., $\semr{1}=\{1\}$ and accordingly for all integer literals.
+
+But we cannot systematically lift standard interpretations of higher-order constants $C$ accordingly.
+Instead, we must provide $\ov{C}$ individually for each higher-order constant.
+But for the purposes of program calculation, this is acceptable because we only have to do it once for the primitive constants of the language.
+In \cite{m&b}, this subtlety is handled by restricting attention to first-order constants.
+%% This restriction is hidden in the phrase "every operator symbol f of the base types" on page 20 of \cite{m&b}
+
+%%For a constant function |c| 
+%%of |n| arguments (including |n=0|) we define
+%%\begin{eqnarray}
+%%\label{confs}
+%%|lb c  rbM rho = osb \x1 -> osb \x2 ... osb \x_n-> cM x1 x2 ... x_n csb ... csb csb|
+%%\end{eqnarray}
+%%Thus if |c| has type |A1 -> A2 -> ... -> A_n -> B|, then |lb c rbM rho| has type 
+%%\begin{spec}
+%%    PP (lb A1 rb -> PP (lb A2 rb -> ...  -> PP (lb A_n rb -> PP lb B rb) ...)) 
+%%\end{spec}
+%%For variables |x| we define
+%%\begin{eqnarray}
+%%\label{vars}
+%%|lb x  rbM rho = osb rho (x) csb ua|
+%%\end{eqnarray}
+%%For example, if the environment |rho| binds |x| to the function |f0| of type
+%%|lb B -> B rb| where |lb B rb = osb 0,1 csb|, then |lb x rbM rho| is the set of the nine functions
+%%seen above.
+
+\paragraph{Functions}
+%%For function types we define
+%%\begin{spec}
+%%    lb A -> B rb  =  (lb A rb ->  PP (lb B rb),<=)
+%%\end{spec}
+%%where |PP (S)| is the type of \emph{nonempty} subsets of |S| and |(<=)| is
+%%defined by
+%%\begin{spec}
+%%    f <= g =  forall v `elem` lb B rb . g(v) sse f(v)
+%%\end{spec}
+%%where |X sse Y| means that |X| is a \emph{nonempty} subset of |Y|.
+We define the interpretation of function types as follows:
+\[\sem{S\to T}=\sem{S}\to\PP\sem{T}\]
+and for $f\in\sem{S\to T}$ we define
+\[\rc{f}=\{g:\sem{S\to T}\,\mid\,g(v)\sse f(v)\mathrm{\,for\,all\,}v\in\sem{S}\}\]
+Thus, the refinement ordering on functions acts point-wise: $g \leq_{S\to T} f$ iff $g(v)\sse f(v)$ for all $v\in\sem{S}$.
+
+
+
+For example, there are nine functions of type \ensuremath{\llbracket\!\;\Conid{Bool}\hsarrow{\rightarrow }{\mathpunct{.}}\Conid{Bool}\;\!\rrbracket} with \ensuremath{\mathbb{B}\mathrel{=}\{\!\;\mathrm{0},\mathrm{1}\;\!\}} whose tables are as follows:
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{7}{@{}>{\hspre}c<{\hspost}@{}}%
+\column{7E}{@{}l@{}}%
+\column{11}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{14}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{22}{@{}>{\hspre}c<{\hspost}@{}}%
+\column{22E}{@{}l@{}}%
+\column{26}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{29}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{37}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{43}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{50}{@{}>{\hspre}c<{\hspost}@{}}%
+\column{50E}{@{}l@{}}%
+\column{51}{@{}>{\hspre}c<{\hspost}@{}}%
+\column{51E}{@{}l@{}}%
+\column{55}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{66}{@{}>{\hspre}c<{\hspost}@{}}%
+\column{66E}{@{}l@{}}%
+\column{70}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{81}{@{}>{\hspre}c<{\hspost}@{}}%
+\column{81E}{@{}l@{}}%
+\column{85}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{94}{@{}>{\hspre}c<{\hspost}@{}}%
+\column{94E}{@{}l@{}}%
+\column{98}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{107}{@{}>{\hspre}c<{\hspost}@{}}%
+\column{107E}{@{}l@{}}%
+\column{111}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{120}{@{}>{\hspre}c<{\hspost}@{}}%
+\column{120E}{@{}l@{}}%
+\column{124}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[7]{}\hspace{1.5em}{}\<[7E]%
+\>[11]{}\enspace{}\<[14]%
+\>[14]{}\Varid{f}_{0}{}\<[22]%
+\>[22]{}\hspace{1.5em}{}\<[22E]%
+\>[26]{}\enspace{}\<[29]%
+\>[29]{}\Varid{f}_{1}{}\<[37]%
+\>[37]{}\hspace{1.5em}\enspace{}\<[43]%
+\>[43]{}\Varid{f}_{2}{}\<[50]%
+\>[50]{}\hspace{1.5em}{}\<[50E]%
+\>[55]{}\enspace\Varid{f}_{3}{}\<[66]%
+\>[66]{}\hspace{1.5em}{}\<[66E]%
+\>[70]{}\enspace\Varid{f}_{4}{}\<[81]%
+\>[81]{}\hspace{1.5em}{}\<[81E]%
+\>[85]{}\enspace\Varid{f}_{5}{}\<[94]%
+\>[94]{}\hspace{1.5em}{}\<[94E]%
+\>[98]{}\enspace\Varid{f}_{6}{}\<[107]%
+\>[107]{}\hspace{1.5em}{}\<[107E]%
+\>[111]{}\enspace\Varid{f}_{7}{}\<[120]%
+\>[120]{}\hspace{1.5em}{}\<[120E]%
+\>[124]{}\enspace\Varid{f}_{8}{}\<[E]%
+\\
+\>[5]{}\mathrm{0}\hspace{1.5em}{}\<[11]%
+\>[11]{}\{\!\;\mathrm{0},\mathrm{1}\;\!\}{}\<[22]%
+\>[22]{}\hspace{1.5em}{}\<[22E]%
+\>[26]{}\{\!\;\mathrm{0},\mathrm{1}\;\!\}{}\<[37]%
+\>[37]{}\hspace{1.5em}\{\!\;\mathrm{0}\;\!\}{}\<[51]%
+\>[51]{}\hspace{1.5em}{}\<[51E]%
+\>[55]{}\{\!\;\mathrm{1}\;\!\}{}\<[66]%
+\>[66]{}\hspace{1.5em}{}\<[66E]%
+\>[70]{}\{\!\;\mathrm{0},\mathrm{1}\;\!\}{}\<[81]%
+\>[81]{}\hspace{1.5em}{}\<[81E]%
+\>[85]{}\{\!\;\mathrm{0}\;\!\}{}\<[94]%
+\>[94]{}\hspace{1.5em}{}\<[94E]%
+\>[98]{}\{\!\;\mathrm{0}\;\!\}{}\<[107]%
+\>[107]{}\hspace{1.5em}{}\<[107E]%
+\>[111]{}\{\!\;\mathrm{1}\;\!\}{}\<[120]%
+\>[120]{}\hspace{1.5em}{}\<[120E]%
+\>[124]{}\{\!\;\mathrm{1}\;\!\}{}\<[E]%
+\\
+\>[5]{}\mathrm{1}\hspace{1.5em}{}\<[11]%
+\>[11]{}\{\!\;\mathrm{0},\mathrm{1}\;\!\}{}\<[22]%
+\>[22]{}\hspace{1.5em}{}\<[22E]%
+\>[26]{}\{\!\;\mathrm{0}\;\!\}{}\<[37]%
+\>[37]{}\hspace{1.5em}\{\!\;\mathrm{0},\mathrm{1}\;\!\}{}\<[51]%
+\>[51]{}\hspace{1.5em}{}\<[51E]%
+\>[55]{}\{\!\;\mathrm{0},\mathrm{1}\;\!\}{}\<[66]%
+\>[66]{}\hspace{1.5em}{}\<[66E]%
+\>[70]{}\{\!\;\mathrm{1}\;\!\}{}\<[81]%
+\>[81]{}\hspace{1.5em}{}\<[81E]%
+\>[85]{}\{\!\;\mathrm{0}\;\!\}{}\<[94]%
+\>[94]{}\hspace{1.5em}{}\<[94E]%
+\>[98]{}\{\!\;\mathrm{1}\;\!\}{}\<[107]%
+\>[107]{}\hspace{1.5em}{}\<[107E]%
+\>[111]{}\{\!\;\mathrm{0}\;\!\}{}\<[120]%
+\>[120]{}\hspace{1.5em}{}\<[120E]%
+\>[124]{}\{\!\;\mathrm{1}\;\!\}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+For example, $f_7=\ov{\neg}$ is the lifting of the usual negation function.
+The ordering $\leq_{Bool\to Bool}$ has top element \ensuremath{\Varid{f}_{0}} and the four bottom elements \ensuremath{\Varid{f}_{5}}, \ensuremath{\Varid{f}_{6}}, \ensuremath{\Varid{f}_{7}} and \ensuremath{\Varid{f}_{8}}.
+
+
+
+%%We now define |lb E rbM rho|, the denotation of an expression |E| for
+%%a given interpretation |M| of the basic constants and evaluated in an environment 
+%%|rho|. Environments are mappings of variables to values.
+%%For a constant function |c| 
+%%of |n| arguments (including |n=0|) we define
+%%\begin{eqnarray}
+%%\label{confs}
+%%|lb c  rbM rho = osb \x1 -> osb \x2 ... osb \x_n-> cM x1 x2 ... x_n csb ... csb csb|
+%%\end{eqnarray}
+%%Thus if |c| has type |A1 -> A2 -> ... -> A_n -> B|, then |lb c rbM rho| has type 
+%%\begin{spec}
+%%    PP (lb A1 rb -> PP (lb A2 rb -> ...  -> PP (lb A_n rb -> PP lb B rb) ...)) 
+%%\end{spec}
+%%For variables |x| we define
+%%\begin{eqnarray}
+%%\label{vars}
+%%|lb x  rbM rho = osb rho (x) csb ua|
+%%\end{eqnarray}
+%%For example, if the environment |rho| binds |x| to the function |f0| of type
+%%|lb B -> B rb| where |lb B rb = osb 0,1 csb|, then |lb x rbM rho| is the set of the nine functions
+%%seen above.
+
+Finally, the clauses for the denotation of $\lambda$ and application terms are
+%%\begin{eqnarray}
+%%\label{lam}                                            
+%% |lb \x -> E  rb rho| &=& |osb \v -> lb E  rb(  rho(x := v)) csb ua|
+%%\\
+%%\label{app}
+%% |lb F E  rb rho| &=& |bigcup osb f(v)  <.>   f `elem` lb F  rb rho &&
+%%                                            v `elem` lb E  rb rho csb|
+%%\end{eqnarray}
+\begin{eqnarray}
+\label{lam}                                            
+ \semr{\lambda x:S.E} &=& \rc{(\lambda v\in\sem{S} . \seme{E}{\rho(x := v)})}
+\\
+\label{app}
+ \semr{F\, E} &=& \bigcup \{f(e) \mid  f \in \semr{F},\, e \in \semr{E}\}
+\end{eqnarray}
+Here the notation $\rho(x := v)$ means the environment $\rho$ extended with the
+binding of $v$ to $x$.
+Because every expression in already interpreted as a set and function expressions must be interpreted as set-valued functions, a $\lambda$-abstraction can be interpreted essentially as the corresponding semantic function.
+We only need to apply the refinement closure.
+Equivalently, we could rewrite (\ref{lam}) using
+%%\begin{spec}
+%%    osb \v -> lb E rb (rho(x := v))csb ua  =  osb f  <.>  forall v : f(v) sse lb E rb (rho(x := v)) csb
+%%\end{spec}
+\[\rc{(\lambda v\in\sem{S} . \seme{E}{\rho(x := v)})}  =  \{f \mid  f(v) \sse \seme{E}{\rho(x := v)} \mathrm{\,for\,all\,}v\in\sem{S}\}\]
+The clause for application captures our intuition of monotonicity of refinement: $F\,E$ is interpreted by applying all possible denotations $f$ of $F$ to all possible denotations $e$ of $E$; each such application returns a set, and we take the union of all these sets.
+
+\paragraph{Formulas}
+Because formulas are a special case of expressions, they are interpreted as non-empty subsets of $\sem{Bool}=\{0,1\}$.
+We write $\top$ for the truth value $\{1\}$ denoting truth.
+The truth value $\{0,1\}$ will never occur (unless the user wilfully interprets a constant in a way that returns it).
+
+The denotation of all Boolean constants and expressions is as usual.
+The denotation of the quantifiers and the special predicates is defined by:
+\begin{eqnarray}
+\semr{E_1\leftarrow E_2}&=& \top \tb\mathrm{iff}\tb \semr{E_1}\sse\semr{E_2}\\
+\semr{\pure{E}}        &=&  \top  \tb\mathrm{iff}\tb \semr{E}=\rc{v} \mathrm{\,for\,some\,} v\in\sem{S}\\
+\semr{\forall_S x : F} &=&  \top  \tb\mathrm{iff}\tb \seme{F}{\rho(x:=v)} = \top \mathrm{\,for\,all\,} v\in\sem{S} \\
+\semr{\exists_S x : F} &=&  \top  \tb\mathrm{iff}\tb \seme{F}{\rho(x:=v)} = \top \mathrm{\,for\,some\,} v\in\sem{S} 
+\end{eqnarray}
+Note that the quantified variables seamlessly range only over values.
+
+%%\begin{eqnarray}
+%%\label{refine}
+%%\ensuremath{\Conid{E}_{1}\leftarrow\Conid{E}_{2}} &=& \ensuremath{\forall \rho \hsforall
+%%\mathbin{:}\llbracket\!\;\Conid{E}_{1}\;\!\rrbracket\;\rho \;\mathbin{\subseteq}\;\llbracket\!\;\Conid{E}_{2}\;\!\rrbracket\;\rho }
+%%\end{eqnarray}
+
+\paragraph{Soundness and Consistency}
+We can now state the soundness of our calculus as follows:
+
+\begin{theorem}[Soundness]
+If $F$ is provable, then $\semr{F}=\top$ for every environment $\rho$ for the free variables of $F$.
+In particular, if \ensuremath{\Conid{E}_{1}\leftarrow\Conid{E}_{2}} is provable, then $\semr{E_1}\sse\semr{E_2}$ for all environments $\rho$.
+\end{theorem}
+\begin{proof}
+As usual, the proof proceeds by induction on derivations.
+
+In particular, we must justify the axioms (\ref{beta}) - (\ref{lambda}).
+We concentrate on (\ref{beta}), which
+requires us to show
+\[\semr{(\lambda x:S.E)\, e} = \semr{E(x:=e)}\]
+for all expressions \ensuremath{\Conid{E}}, all pure expressions \ensuremath{\Varid{e}} and all environments \ensuremath{\rho }.  The proof divides into
+two cases according to the two axioms for purity: either \ensuremath{\Varid{e}} is an application of a constant to pure arguments, in which case $\semr{e}$ is a singleton set, or $e$ is a lambda abstraction.
+For the former we will need the fact that if \ensuremath{\Varid{e}} is single-valued, then
+$\semr{E(x:=e)}  = \seme{E}{\rho(x:= !\semr{e})}$
+where $!\{v\}=v$. This \emph{substitution lemma} can be proved by structural induction on \ensuremath{\Conid{E}}.
+That means we can argue:
+\def\by#1{\\=\{\text{#1}\}\\}
+\def\byref#1{\by{\ref{#1}}}
+
+\[\begin{array}{l}
+\semr{(\lambda x:S.E)\,e}
+\byref{app}
+         \bigcup \{ f(v) \mid f\in \semr{\lambda x.E},\, v \in\semr{e}\}
+\byref{lam}
+         \bigcup \{ f(v) \mid f(w) \sse \seme{E}{\rho(x:=w)} \text{ for all } w\in\sem{S},\; v\in \semr{e}\}
+\by{subsumed sets can be removed from a union}
+         \bigcup \{ f(v) \mid f(w) = \seme{E}{\rho(x:=w)} \text{ for all } w\in\sem{S},\; v\in \semr{e}\}
+\by{$\semr{e}\sse\sem{S}$}
+         \bigcup \{ \seme{E}{\rho(x:=v)} \mid  v \in \semr{e}\}
+\by{\ensuremath{\Varid{e}} is single-valued}
+         \seme{E}{\rho(x:= !\semr{e})}
+\by{substitution lemma}
+         \semr{E(x:=e)}
+\end{array}\]
+
+For the second case, where \ensuremath{\Varid{e}} is a lambda abstraction \ensuremath{\lambda \hslambda \Varid{y}\mathbin{:}\Conid{T}\hsarrow{\rightarrow }{\mathpunct{.}}\Conid{F}}, we need the fact that
+\[\semr{(\lambda x.E)\,(\lambda y.F)} = \seme{E}{\rho(x:= \lambda v.\seme{F}{\rho(y:= v)})}\]
+This fact can be established as a corollary to the \emph{monotonicity lemma} which asserts $\seme{E}{\rho(x:=f)}\sse\seme{E}{\rho(x:=g)}$ whenever $f(v) \sse g(v)$ holds for all $v\in\sem{S}$.
+for all expressions \ensuremath{\Conid{E}} and environments \ensuremath{\rho }. The monotonicity lemma can be proved by structural induction on \ensuremath{\Conid{E}}.
+The corollary above is now proved by reasoning
+\[\begin{array}{l}
+         \semr{(\lambda x.E)\,(\lambda y.F)}
+\byref{app}
+         \bigcup \{ h(f) \mid h \in \semr{\lambda x.E},\, f \in \semr{\lambda y.F} \}
+\by{as in previous calculation}
+         \bigcup \{ \seme{E}{\rho(x:=f)} \mid  f \in \semr{\lambda y. F}\}
+\byref{lam}
+         \bigcup \{ \seme{E}{\rho(x:=f)} \mid f(v)\sse\seme{F}{\rho(y:=v)} \text{ for all } v\in\sem{T}\}
+\by{$\sse$-direction: monotonicity lemma; $\supseteq$-direction: $X\sse \bigcup Y$ if $X\in Y$}
+         \seme{E}{\rho(x:= \lambda v.\seme{F}{\rho(y:= v)})}
+\end{array}\]
+It remains to show that the latter is equal to $\semr{E(x:= \lambda y.F)}$.
+Here we proceed by structural induction on \ensuremath{\Conid{E}}. We omit the details. The other axioms are proved by similar reasoning.
+\end{proof}
+
+
+%% FR these are two cases for the above structural induction
+%%Here are two cases:
+%%\begin{spec}
+%%     ^^  lb x(x:= \y->F) rb rho
+%%=          {- substitution -}
+%%         lb \y->F rb rho
+%%=          {- (\ref{lam}) -}
+%%         osb \v-> lb F rb(rho(y:=v)) csb ua
+%%=          {- substitution -}
+%%         lb x rb(rho(x:= \v-> lb F rb(rho(y:=v))))
+%%\end{spec}
+%%and
+%%\begin{spec}
+%%    ^^   lb (\z->E)(x:= \y->F) rb rho
+%%=          {- substitution, assuming |z| does not occur free in |F| -}
+%%         lb \z->E(x:= \y->F) rb rho
+%%=          {- (\ref{lam}) -}
+%%         osb \v-> lb E(x:= \y->F rb (rho(z:=v)) csb ua
+%%=          {- induction -}
+%%         osb \v-> lb E rb(rho(z:=v)(x:= \w-> lb F rb(rho(z:=v)(y:=w)))) csb ua
+%%=          {- since |z| does not occur free in |F| -}
+%%         osb \v-> lb E rb(rho(z:=v)(x:= \w-> lb F rb(rho(y:=w)))) csb ua
+%%=          {- environments: |rho(x:=a)(y:=b)=rho(y:=b)(x:=a)|  -}
+%%         osb \v-> lb E rb(rho(x:= \w-> lb F rb)(rho(y:=w))(z:=v)) csb ua
+%%=          {- (\ref{lam}) -}
+%%         lb \z->E rb(rho(x:= \w-> lb F rb)(rho(y:=w)))     
+%%\end{spec}
+
+
+As a straightforward consequence of soundness, we have
+\begin{theorem}[Consistency]
+Our calculus is consistent, i.e., we cannot derive a contradiction.
+\end{theorem}
+\begin{proof}
+If we could derive a contradiction, then soundness would yield a contradiction in set theory.
+\end{proof}
+Technically, our calculus is only consistent under the assumption that set theory is consistent.
+We can strengthen that result by using a much weaker target language than set theory for our semantics.
+Indeed, standard higher-order logic (using an appropriate definition of power set) is sufficient.
+
+\section{Summary}
+
+The need for nondeterministic functions arose while the first author was preparing a
+text on an introduction to Algorithm Design using Haskell. The book, which is co-authored by
+Jeremy Gibbons, will be published by Cambridge University Press next year. Two of the six
+parts of the book are devoted to greedy algorithms and thinning algorithms. To make the
+material as accessible as possible, we wanted to stay close to Haskell and that meant
+we did not want to make the move from functions to relations, as proposed for instance in \cite{bird&demoor}.
+Instead, we made use of just two nondeterministic functions, \ensuremath{\Conid{MinWith}} and \ensuremath{\Conid{ThinBy}} (or
+three if you count \ensuremath{\Conid{MaxWith}}), and reasoned about refinement rather than equality when the
+need arose. The legitimacy of the calculus, as propounded above, is not given in the book. 
+The problems associated with reasoning about nondeterminism were discussed at the Glasgow 
+meeting of WG2.1 in 2016, when the second author came on board. Our aim has been to write a 
+short and hopefully sufficient introduction to the subject of nondeterminism for functional programmers rather than logicians. In this enterprise we made much use of the very readable 
+papers by Joe Morris and Alexander Bunkenberg. 
+
+\begin{thebibliography}{99}
+
+
+\bibitem[1]{bird&demoor}
+Richard S. Bird and Oege de Moor. 
+\newblock \emph{The Algebra of Programming}.
+\newblock Prentice-Hall International Series in Computer Science, Hemel
+Hempstead, UK (1997).
+
+\bibitem[2]{lf}
+R.~Harper, F.~Honsell, and G.~Plotkin.
+\newblock {A framework for defining logics}.
+\newblock {\em {Journal of the Association for Computing Machinery}},
+  40(1):143--184, 1993.
+
+\bibitem[3]{m&b}
+Joseph M. Morris and Alexander Bunkenburg. 
+\newblock Specificational functions.
+\newblock \emph{ACM Transactions on Programming Languages and Systems},
+21 (3) (1999) pp 677--701.
+
+\bibitem[4]{m&b2}
+Joseph M. Morris and Alexander Bunkenburg. 
+\newblock Partiality and Nondeterminacy in Program Proofs
+\newblock\emph{Formal Aspects of Computing} 10 (1998) pp 76--96.
+
+\bibitem[5]{m&t}
+Joseph M. Morris and Malcolm Tyrrell.
+\newblock Dually nondeterministic functions.
+\newblock\emph{ACM Transactions on Programming Languages and Systems},
+30 (6), Article 34 (2008).
+
+\end{thebibliography}
+
+\section*{Appendix}
+
+
+Here is the example, known as the \emph{paragraph} problem. Consider the task of dividing 
+a list of words into a list of lines so that each line is subject to a maximum line width 
+of \ensuremath{\Varid{w}}. Each line is a list of words and its width is the sum of the length of the words 
+plus the number of inter-word spaces. There is an obvious greedy algorithm for this problem, 
+namely to add the next word to the current line if it will fit, otherwise to start a newline 
+with the word. For what cost function does the greedy algorithm produce a division with 
+minimum cost?
+
+The obvious answer is that such a division has the minimum possible number of lines.
+So it has, but we cannot calculate this algorithm from a specification involving
+\ensuremath{\Varid{minWith}\;\Varid{length}}. To see why, consider  a list of words whose lengths are \ensuremath{[\mskip1.5mu \mathrm{3},\mathrm{6},\mathrm{1},\mathrm{8},\mathrm{1},\mathrm{8}\mskip1.5mu]} 
+(the words are not important, only their lengths matter). Taking \ensuremath{\Varid{w}\mathrel{=}\mathrm{12}}, there are four 
+shortest possible layouts, of which two are
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{4}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[4]{}\Varid{p}_{1}\mathrel{=}[\mskip1.5mu [\mskip1.5mu \mathrm{3},\mathrm{6},\mathrm{1}\mskip1.5mu],[\mskip1.5mu \mathrm{8}\mskip1.5mu],[\mskip1.5mu \mathrm{1},\mathrm{8}\mskip1.5mu]\mskip1.5mu]{}\<[E]%
+\\
+\>[4]{}\Varid{p}_{2}\mathrel{=}[\mskip1.5mu [\mskip1.5mu \mathrm{3},\mathrm{6}\mskip1.5mu],[\mskip1.5mu \mathrm{1},\mathrm{8},\mathrm{1}\mskip1.5mu],[\mskip1.5mu \mathrm{8}\mskip1.5mu]\mskip1.5mu]{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+Let \ensuremath{\Varid{add}\;\Varid{x}\;\Varid{p}} be the function that adds the next word \ensuremath{\Varid{x}} to the end of the last line if
+the result will still fit into a width of \ensuremath{\mathrm{12}}, or else begins a new line. In particular
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{4}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{8}{@{}>{\hspre}c<{\hspost}@{}}%
+\column{8E}{@{}l@{}}%
+\column{11}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{23}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[4]{}\Varid{q}_{1}{}\<[8]%
+\>[8]{}\mathrel{=}{}\<[8E]%
+\>[11]{}\Varid{add}\;\mathrm{2}\;\Varid{p}_{1}\mathrel{=}{}\<[23]%
+\>[23]{}[\mskip1.5mu [\mskip1.5mu \mathrm{3},\mathrm{6},\mathrm{1}\mskip1.5mu],[\mskip1.5mu \mathrm{8}\mskip1.5mu],[\mskip1.5mu \mathrm{1},\mathrm{8}\mskip1.5mu],[\mskip1.5mu \mathrm{2}\mskip1.5mu]\mskip1.5mu]{}\<[E]%
+\\
+\>[4]{}\Varid{q}_{2}{}\<[8]%
+\>[8]{}\mathrel{=}{}\<[8E]%
+\>[11]{}\Varid{add}\;\mathrm{2}\;\Varid{p}_{2}\mathrel{=}{}\<[23]%
+\>[23]{}[\mskip1.5mu [\mskip1.5mu \mathrm{3},\mathrm{6}\mskip1.5mu],[\mskip1.5mu \mathrm{1},\mathrm{8},\mathrm{1}\mskip1.5mu],[\mskip1.5mu \mathrm{8},\mathrm{2}\mskip1.5mu]\mskip1.5mu]{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+We have
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{4}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[4]{}\Varid{length}\;\Varid{p}_{1}\leq \Varid{length}\;\Varid{p}_{2}\mathrel{\wedge}\Varid{length}\;\Varid{q}_{1}\mathbin{>}\Varid{length}\;\Varid{q}_{2}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+so the monotonicity condition fails. The situation can be redeemed by strengthening the
+cost function to read
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{4}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[4]{}\Varid{cost}\;\Varid{p}\mathrel{=}(\Varid{length}\;\Varid{p},\Varid{width}\;(\Varid{last}\;\Varid{p})){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+In words one paragraph costs less than another if its length is shorter, or if the lengths 
+are equal and the width of the last line is shorter. Minimising \ensuremath{\Varid{cost}} will also minimise 
+\ensuremath{\Varid{length}}. This time we do have
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{4}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[4]{}\Varid{cost}\;\Varid{p}\leq \Varid{cost}\;\Varid{p'}\Rightarrow\Varid{cost}\;(\Varid{add}\;\Varid{x}\;\Varid{p})\leq \Varid{cost}\;(\Varid{add}\;\Varid{x}\;\Varid{p'}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+as can be checked by considering the various cases, so the monotonicity condition holds. 
+However, we also have
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[5]{}\Varid{cost}\;(\Varid{add}\;\mathrm{5}\;\Varid{p}_{1})\mathrel{=}\Varid{cost}\;(\Varid{add}\;\mathrm{5}\;\Varid{p}_{2})\mathrel{=}(\mathrm{4},\mathrm{5}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+and \ensuremath{\Varid{cost}\;\Varid{p}_{2}\mathbin{<}\Varid{cost}\;\Varid{p}_{1}}, so the strong monotonicity condition (\ref{strong}) fails.
+
+
+
+
+\end{document}
