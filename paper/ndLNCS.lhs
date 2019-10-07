@@ -142,6 +142,8 @@ minimum cost, we need to prove the very strong fact that
 \label{strong}
 |cost c <= cost c'  ^  <==>  ^  cost (add x c) <= cost (add x c')|
 \end{equation}
+% FR@RB: Did you mean ==> here instead of <==>?
+
 for all candidates |c| and |c'| in |cs|. To see why, observe that if |c| is the 
 first candidate with minimum cost in a list of candidates, then |add x c| has to be the first 
 candidate with minimum cost in the list of extended candidates. This follows from our definition 
@@ -149,7 +151,7 @@ of |minWith| which selects the first element with minimum cost in a list of cand
 that the extension of a candidate |c'| earlier in the list has a larger cost we have to show that
 \begin{equation}
 \label{mono1}
-|cost c' > cost c  ^  ==>  ^  cost (add x c') > cost (add x c)|
+|cost c < cost c'  ^  ==>  ^  cost (add x c) < cost (add x c')|
 \end{equation}
 for all |c| and |c'| in |cs|. To ensure that the extension of a candidate |c'| later in the list 
 does not have a smaller cost we have to show that 

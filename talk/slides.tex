@@ -1,0 +1,562 @@
+\documentclass{beamer}
+%\usepackage{graphicx,url}
+\usepackage{amsmath}
+\usepackage{amssymb}
+%\usepackage{xkeyval}
+%\usepackage{multirow}
+%\usepackage{mytikz}
+%\usepgflibrary{shapes}
+\usepackage{stmaryrd}
+\usepackage{basics}
+\usepackage{basics-slides}
+
+\def\choice#1{\fold{\sqcap}{#1}}
+\def\prop{\cn{bool}}
+\def\pure#1{\mathit{pure}(#1)}
+\def\refine#1#2{#1\stackrel{\mathrm{ref}}{\leftarrow}#2}
+\def\refine#1#2{#1\stackrel{\mathrm{ref}}{\leftarrow}#2}
+
+\def\der{\,\hlA{\vdash}\,}
+\def\syneq{\,\hlA{\doteq}\,}
+
+\def\sem#1{\llbracket#1\rrbracket}
+\def\seme#1#2{\llbracket#1\rrbracket_{#2}}
+\def\semr#1{\seme{#1}{\rho}}
+\def\rc#1{#1^\leftarrow}
+\def\pwr{\mathbb{P}}
+\def\PP#1{\pwr^{\neq\es}#1}
+
+\makecn{optimum}
+\makecn{Input}
+\makecn{Cand}
+\def\inp{input}
+\makecn{cost}
+\makecn{genCand}
+\makecn{minCost}
+\makecn{extCand}
+\makecn{type}
+\makecn{List}
+\makecn{foldr}
+\makecn{map}
+\makecn{Option}
+
+
+\begin{document}
+
+\title{How to calculate with nondeterministic functions}
+\author{Richard Bird and \underline{Florian Rabe}}
+\institute{Computer Science, Oxford University resp. University Erlangen-N\"urnberg}
+\date{July 2019}
+\begin{frame}
+    \titlepage
+\end{frame}
+
+\section{Background}
+
+\begin{frame}\frametitle{Calculate Functional Programs}
+\begin{itemize}
+\item Bird–Meertens formalism (Squiggol)
+ \begin{itemize}
+ \item derive functional programs from specifications
+ \item use equational reasoning to calculate correct programs
+ \item optimize along the way
+ \end{itemize}
+ Example: \[h\,(\fold\,f\,e\,xs) = \fold\,F\,(h\,e)\, xs\]
+ try to solve for $F$ to get more efficient algorithm
+\item Richard's textbooks on functional programming
+ \begin{itemize}
+ \item Introduction to Functional Programming, 1988
+ \item Introduction to Functional Programming using Haskell, 1998
+ \item Thinking Functionally with Haskell, 2014
+ \end{itemize} 
+\end{itemize}
+\end{frame}
+
+\begin{frame}\frametitle{History}
+\begin{blockitems}{My background}
+\item not algorithms or functional programming
+\item formal systems (logics, type theories, foundations, DSLs, etc.)
+\item design, analysis, implementation
+\item applications to all STEM disciplines
+\end{blockitems}
+
+\begin{blockitems}{This work}
+\item Richard encountered problem with an elementary example
+\item He built bottom-up solution using non-deterministic functions
+\item I got involved in working out the formal details of the calculus
+\end{blockitems}
+\lec{i.e., my contribution is arguably the less interesting part of this work :)}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Overview}
+
+\begin{frame}\frametitle{Summary}
+\begin{blockitems}{Our Approach}
+\item Specifications tend to have non-deterministic flavor
+  \lec{even when specifying deterministic functions}
+\item Program calculation with deterministic $\lambda$-calculus can be limiting
+\item Our idea: 
+ \begin{itemize}
+ \item extend to $\lambda$-calculus with non-deterministic functions
+ \item in a way that preserves existing notations and theorems
+  \lec{works well}
+ \item mostly following the papers by Morris and Bunkenburg
+ \end{itemize}
+\end{blockitems}
+
+\begin{blockitems}{Warning}
+ \item We calculate and execute only deterministic functions.
+ \item We use non-deterministic functions only for specifications and intermediate values.
+   \glec{calculus allows more but not explored here}
+\end{blockitems}
+\end{frame}
+
+\begin{frame}\frametitle{Non-Determinism}
+Kinds of function
+\begin{itemize}
+\item Function $A\to B$ is relation on $A$ and $B$ that is
+ \begin{itemize}
+ \item total (at least one output per input)
+ \item deterministic (at most one output per input)
+ \end{itemize}
+\item Partial functions = drop totality
+ \begin{itemize}
+ \item very common in math and elementary CS
+ \item can be modeled as option-valued total functions \[A\to \Option\,B\]
+ \end{itemize}
+\item Non-deterministic functions = drop determinism
+ \begin{itemize}
+ \item somewhat dual to partial functions, but much less commonly used
+ \item can be modeled as nonempty-set-valued deterministic functions \[A\to \PP\, B\]
+ \end{itemize}
+\end{itemize}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Motivation}
+
+\begin{frame}\frametitle{A Common Optimization Problem}
+Two-step optimization process
+\begin{enumerate}
+\item generate list of candidate solutions (from some input)
+ \[\genCand: \Input\to \List\, \Cand\]
+\item choose cheapest candidate from that list
+\end{enumerate}
+\[\minCost: \List\, \Cand \to \Cand\]
+\[\optimum\,\inp = \minCost\,(\genCand\,\inp)\]
+
+\begin{blockitems}{$\minCost$ is where non-determinism will come in}
+\item $\minCost\,cs$ = \alert{some} $c$ with minimal cost among $cs$
+\lec{non-deterministic}
+\item for now: $\minCost\, cs$ = \alert{first} such $c$
+\lec{deterministic}
+\end{blockitems}
+\end{frame}
+
+
+\begin{frame}\frametitle{A More Specific Setting}
+\[\genCand: \Input\to \List\, \Cand\]
+\[\minCost: \List\, \Cand \to \Cand\]
+\hrule
+\vspace{.5cm}
+
+\begin{itemize}
+\item $\inp$ is some recursive data structure
+\item candidates for bigger input are built from \\ candidates for smaller input
+\item our case: $\inp$ is a list, and $\genCand$ is a fold over \inp
+ \[\extCand\,x: \Cand \to \List\,\Cand\]
+  \glec{extends candidate for $xs$ to candidate list for $x::xs$}
+ \[\genCand\, (x::xs) = \extCand\, x\,(\genCand\,xs)\]
+\end{itemize}
+\end{frame}
+
+\begin{frame}\frametitle{Idea to Derive Efficient Algorithm}
+\begin{itemize}
+\item Fuse $\minCost$ and $\genCand$ into a single fold
+\item Greedy algorithm
+\begin{itemize}
+\item don't build all candidates, apply $\minCost$ once at the end
+\item apply $\minCost$ early on, extend only optimal candidates
+\end{itemize}
+\item Not necessarily sound:\\
+   \tb non-optimal candidates for small input \\
+   \tb might extend to \\
+   \tb optimal candidates for large input
+\end{itemize}
+
+\hrule
+\color{gray}
+\[\optimum\,\inp = \minCost\,(\genCand\,\inp)\]
+\[\genCand\, (x::xs) = \extCand\, x\,(\genCand\,xs)\]
+\[\genCand: \Input\to \List\, \Cand\]
+\[\minCost: \List\, \Cand \to \Cand\]
+\[\extCand\,x: Cand \to \List\,\Cand\]
+\end{frame}
+
+\begin{frame}\frametitle{Solution through Program Calculation}
+Obtain a greedy algorithm from the specification
+\begin{enumerate}
+\item Assume \[\optimum\,\inp = \fold\, F\,c_0\,\inp\]
+ \glec{($c_0$ is base solution for empty input)}
+and try to solve for folding function $F$
+\item<2-> Routine equational reasoning yields
+\begin{itemize}
+  \item solution:
+    \[F\,x\,c = \minCost\,(\extCand\,x\,c)\]
+  \item soundness condition:
+    \[\optimum\,(x::xs) = F\,x\,(\optimum\,xs)\]
+Intuition: solution $F\,x\,c$ for input $x::xs$ is \\ cheapest extension of solution $c$ for input $xs$
+\end{itemize}
+%  \item \ldots if optimal candidates for small input extend to optimal candidates for 
+%   \[\minCost\,(\flatMap\,(\extCand\,x)\,cs) = \minCost\,(\extCand\,x\,(\minCost\,cs))\]
+\end{enumerate}
+\end{frame}
+
+\begin{frame}\frametitle{A Subtle Problem}
+{{\color{gray}
+Soundness condition (from previous slide):
+  \[F\,x\,c = \minCost\,(\extCand\,x\,c)\]
+  \[\optimum\,(x::xs) = F\,x\,(\optimum\,xs)\]
+optimal candidate for $x::xs$ must be \\ optimal extension of optimal candidate for $xs$
+}}
+\hrule
+\vspace{.5cm}
+
+Soundness condition is intuitive and common\\
+but subtly stronger than needed:
+\begin{itemize}
+\item $\optimum$ and $F$ defined in terms of $\minCost$
+\item Actually states:\\
+  \alert{first} optimal candidate for $x::xs$ is \\ \alert{first} optimal extension of \alert{first} optimal candidate for $xs$
+ \lec{rarely holds in practice}
+\end{itemize}
+\end{frame}
+
+\begin{frame}\frametitle{What went wrong?}
+What happens:
+\begin{itemize}
+\item Specification of $\minCost$ naturally non-deterministic
+\item Using standard $\lambda$-calculus forces\\ artificial once-and-for-all choice to make $\minCost$ deterministic
+\item Program calculation uses \underline{only equality}
+ \lec{artificial choices must be preserved}
+\end{itemize}
+
+What should happen:
+\begin{itemize}
+\item Use $\lambda$-calculus with non-deterministic functions
+\item $\minCost$ returns \alert{some} candidate with minimal cost
+\item Program calculation uses \underline{equality and refinement}
+\lec{gradual transition towards deterministic solution}
+\end{itemize}
+
+%Alternative formal framework
+%\begin{itemize}
+%\item Switch to relational framework
+%\item Possible but major departure from standard $\lambda$-calculus
+%\lec{especially bad in a funcional programming textbook}
+%\end{itemize}
+\end{frame}
+
+%\begin{tabular}{l@{\;:\,}l}
+%$\Input$   & $\type$ \\
+%$\inp$     & $\List\Input$ \\
+%$\Cand$    & $\type$ \\
+%$\genCand$ & $\List\Input \to \List\Cand$ \\
+%$\minCost$ & $\List\Cand \to \Cand$\\
+%\end{tabular}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Formal System: Syntax}
+
+\begin{frame}{Key Intuitions (Don't skip this slide)}
+Changes to standard $\lambda$-calculus
+\begin{itemize}
+\item $A\to B$ is type of \textbf{non-deterministic} functions
+\item Every term represents a \textbf{nonempty set} of possible values
+\item<2-> \textbf{Pure} terms \underline{roughly} represent a single value
+\item<3-> \textbf{Refinement} relation between terms of the same type: \\
+ $\refine{s}{t}$ \tb iff \tb $s$-values are also $t$-values
+\item<4-> Refinement is an order at every type, in particular
+ \[\refine{s}{t} \tb\wedge\tb \refine{t}{s} \tb\impl\tb s\syneq t\]
+ \glec{$\syneq$ is the usual equality between terms}
+\item<5-> Refinement for functions
+\begin{itemize}
+\item point-wise: $\refine{f}{g}$ \tb iff\tb $\refine{f(x)}{g(x)}$ for all pure $x$
+\item deterministic functions are minimal wrt refinement
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}\frametitle{Syntax: Type Theory}
+\begin{commgrammar}
+\gprod{A,B}{a}{base types (integers, lists, etc.)} \\
+\galtprod{A\to B}{non-det. functions} \\
+\gprod{s,t}{c}{base constants (addition, folding, etc.)} \\
+\galtprod{x}{variables} \\
+\galtprod{\lambda x:A.t}{function formation} \\
+\galtprod{s\,t}{function application} \\
+\galtprod{\choice{s,t}}{non-deterministic choice}
+\end{commgrammar}
+
+Typing rules as usual plus
+\[\rul{\der s:A \tb \der t:A}{\der \choice{s,t}:A}\]
+\end{frame}
+
+\begin{frame}\frametitle{Syntax: Logic}
+Additional base types/constants:
+\begin{itemize}
+ \item $\prop:\type$
+ \item logical connectives and quantifiers as usual, e.g.,
+   \[\rul{\der s:A \tb \der t:A}{\der s\syneq t:\prop}\]
+ \item refinement predicate
+   \[\rul{\der s:A \tb \der t:A}{\der \refine{s}{t}:\prop}\]
+ \item purity predicate
+   \[\rul{\der t:A}{\der \pure{t}:\prop}\]
+\end{itemize}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Formal System: Semantics}
+
+\begin{frame}\frametitle{Semantics: Overview}
+\begin{center}
+\begin{tabular}{ll}
+\hline
+Syntax & Semantics \\
+\hline
+type $A$              & set $\sem{A}$ \\
+context declaring $x:A$ & environment mapping $\rho: x\mapsto \sem{A}$\\
+term $t:A$      & nonempty subset $\semr{t}\in\PP\sem{A}$\\
+refinement $\refine{s}{t}$ & subset $\semr{s}\sq\semr{t}$\\
+purity $\pure{t}$ for $t:A$  & $\semr{t}$ is generated by a single $v\in\sem{A}$\\
+choice $\choice{s,t}$ & union $\semr{s}\cup\semr{t}$\\
+\hline
+\end{tabular}
+\end{center}
+\end{frame}
+
+\begin{frame}\frametitle{Semantics: Functions}
+Functions are interpreted as set-valued semantic functions:
+\[\sem{A\to B} = \sem{A}\Rightarrow\PP\sem{B}\]
+\glec{using $\Rightarrow$ for the usual set-theoretical function space}
+
+Function application is monotonous wrt refinement:
+\[\semr{f\,t} = \bigcup_{\phi\in\semr{f},\tau\in\semr{t}} \phi(\tau)\]
+
+\onslide<2>{
+The interpretation of a $\lambda$-abstractions is closed under refinements:
+\[\semr{\lambda x:A.t} = \big\{\phi\,|\, \text{ for all } \xi\in\sem{A}:\;\phi(\xi)\sq \seme{t}{\rho,x\mapsto \xi}\big\}\]
+%\in\sem{A}\Rightarrow\PP\sem{B}
+\glec{contains all deterministic functions that return refinements of $t$}
+}
+\end{frame}
+
+\begin{frame}\frametitle{Semantics: Purity and Base Cases}
+For every type $A$, also define embedding $\sem{A}\ni \xi\mapsto \rc{\xi}\sq\sem{A}$
+\begin{itemize}
+ \item for base types: $\rc{\xi}=\{\xi\}$
+ \item for function types: closure under refinement
+\end{itemize}
+
+Pure terms are interpreted as embeddings of singletons:
+\[\semr{\pure{t}}=1 \tb\text{iff}\tb \semr{t}=\rc{\tau}\text{ for some } \tau\]
+
+\begin{itemize}
+\item Variables
+\[\seme{x}{\rho} = \rc{\rho(x)}\]
+\glec{note: $\rho(x)\in\sem{A}$, not $\rho(x)\sq\sem{A}$}
+\item Base types: as usual
+\item Base constants $c$ with usual semantics $C$:
+  \[\semr{c}=\rc{C}\]
+  \glec{straightforward if $c$ is first-order}
+\end{itemize}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Formal System: Proof Theory}
+
+\begin{frame}\frametitle{Overview}
+\begin{blockitems}{Akin to standard calculi for higher-order logic}
+\item Judgment $\Gamma\der F$ for a context $\Gamma$ and $F:\prop$
+\item Usual axioms/rules for equality and propositional connectives
+\lec{modifications needed when variable binding is involved}
+\item Intuitive axioms/rules for choice and refinement
+ \lec{technical difficulty to get purity right}
+\end{blockitems}
+
+\begin{blockitems}{Multiple equivalent axiom systems}
+\item In the sequel, no distinction between primitive and derivable rules
+\item Very subtle in practice to prove derivability of rules
+ \lec{formalization in logical framework helps}
+\end{blockitems}
+\end{frame}
+
+\begin{frame}\frametitle{Refinement and Choice}
+\begin{itemize}
+\item General properties of refinement
+\begin{itemize}
+\item $\refine{s}{t}$ is an order (wrt $\syneq$)
+\item characteristic property:
+  \[\refine{s}{t} \tb\text{ iff }\tb \refine{u}{s} \text{ implies } \refine{t}{u} \text{ for all } u\]
+\end{itemize}
+\item<2-> General properties of choice
+\begin{itemize}
+\item $\choice{s,t}$ is associative, commutative, idempotent (wrt $\syneq$)
+\item no neutral element
+ \glec{we do not have an undefined term with $\semr{\bot}=\es$}
+\end{itemize}
+\item<3-> Refinement of choice
+\begin{itemize}
+\item $\refine{u}{\choice{s,t}}$ refines to a pure term $u$ iff $s$ or $t$ does
+\item in particular, $\refine{t_i}{(\choice{t_1,t_2})}$
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}\frametitle{Rules for Purity}
+\begin{itemize}
+\item Purity predicate only present for technical reasons
+\item Pure are
+\begin{itemize}
+\item base constants applied to any number of pure arguments
+\item $\lambda$-abstractions
+\end{itemize}
+ \glec{and thus all terms without $\sqcap$}
+\item Syntactic vs. semantic approach
+\begin{itemize}
+ \item Semantic = use rule
+  \[\rul{\der\pure{s} \tb \der s\syneq t}{\der\pure{t}}\]
+   \lec{thus $\choice{1,1}$ is pure}
+ \item literature uses syntactic rules like ``variables are pure''
+   \lec{easier at first, trickier in the details}
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}\frametitle{Rules for Function Application}
+\begin{itemize}
+\item Distribution over choice:
+\[\der f\,(\choice{s,t}) \syneq \choice{(f\,s),(f\,t)}\]
+\[\der (\choice{f,g})\,t \syneq \choice{(f\,t),(g\,t)}\]
+\item Monotonicity wrt refinement:
+\[\rul{\der \refine{f'}{f} \tb \refine{t'}{t}}{\der\refine{f'\,t'}{f\,t}}\]
+%\glec{accordingly for function composition}
+\item Characteristic property wrt refinement:
+ \[\refine{u}{f\,t} \tb\text{ iff }\tb \refine{f'}{f},\;\refine{t'}{t},\; \refine{u}{f'\,t'}\]
+\end{itemize}
+
+%\begin{itemize}
+%\item intuition: bound variables are meant to range over values
+%\item insert purity assumptions in the right places
+%% \glec{alternatively, syntactic approach uses a single non-semantic rule for that}
+%\end{itemize}
+\end{frame}
+
+
+\begin{frame}\frametitle{Beta-Conversion}
+Intuition: bound variable is pure, so only substitute with pure terms
+\[\rul{\der t:A \tb \pure{t}}{\der (\lambda x:A.t)\,s \syneq t[x/s]}\]
+
+Counter-example if we omitted the purity condition
+\begin{itemize}
+\item Wrong:
+\[(\lambda x:\Z.x+x)(\choice{1,2})\syneq (\choice{1,2})+(\choice{1,2})\syneq\choice{2,3,4}\]
+\item Correct:
+\[(\lambda x:\Z.x+x)\,(\choice{1,2})\syneq \choice{((\lambda x:\Z.x+x)\,1),((\lambda x:\Z.x+x)\,2)}\syneq\choice{2,4}\]
+\end{itemize}
+\lec{Computational intuition: no lazy resolution of non-determinism}
+\end{frame}
+
+\begin{frame}\frametitle{Xi-Conversion}
+\begin{itemize}
+\item Equality conversion under a $\lambda$, congruence rule for binders
+\item Usual formulation
+\[\rul{x:A\der f\syneq g}{\der \lambda x:A.f\syneq \lambda x:A.g}\]
+\item Adjusted: bound variable is pure, so add purity assumption when traversing into a binder
+\[\rul{x:A,\;\pure{x}\der f\syneq g}{\der \lambda x:A.f\syneq \lambda x:A.g}\]
+ \glec{needed to discharge purity conditions of the other rules}
+\end{itemize}
+\lec{Computational intuition: functions can assume arguments to be pure}
+\end{frame}
+
+\begin{frame}\frametitle{Eta-Conversion}
+Because $\lambda$-abstractions are pure, $\eta$ can only hold for pure functions
+\[\rul{\der f:A\to B \tb \der\pure{f}}{\der f \syneq \lambda x:A.(f\,x)}\]
+
+Counter-example if we omitted the purity condition:
+\begin{itemize}
+\item Wrong:
+\[\choice{f,g} \syneq \lambda x:\Z.(\choice{f,g})\,x\syneq \lambda x:\Z.\choice{(f\,x),(g\,x)}\]
+\item Correct: \[\refine{\choice{f,g}}{\lambda x:\Z.\choice{(f\,x),(g\,x)}}\]
+but not the other way around
+\end{itemize}
+\lec{Computational intuition: choices under a $\lambda$ are resolved fresh each call}
+
+%\hrule
+%
+%Accordingly for functional extensionality:
+%\[\rul{\der f:A\to B \tb \der g:A\to B\tb\der\pure{f}\tb\der\pure{g}\tb x:A,\;\pure{x}\der f\,x \syneq g\,x}{\der f\syneq g}\]
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Formal System: Meta-Theorems}
+
+\begin{frame}\frametitle{Overview}
+Soundness
+\begin{itemize}
+\item If $\der F$, then $\semr{F}=1$
+\item In particular: if $\der\refine{s}{t}$, then $\semr{s}\sq\semr{t}$.
+\end{itemize}
+
+Consistency
+\begin{itemize}
+\item $\der F$ does not hold for all $F$
+\end{itemize}
+
+Completeness
+\begin{itemize}
+\item Not investigated at this point
+\item Presumably similar to usual higher-order logic
+\end{itemize}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Conclusion}
+
+\begin{frame}\frametitle{Revisiting the Motivating Example}
+\begin{itemize}
+\item Applied to many examples in forthcoming textbook
+  \glec{Algorithm Design using Haskell, Bird and Gibbons}
+\item Two parts on greedy and thinning algorithms
+\item Based on two non-deterministic functions
+ \[\cn{MinWith}:\List\,A\to(A\to B)\to (B\to B\to\prop)\to A\]
+ \[\cn{ThinBy}:\List\,A\to(A\to A\to\prop)\to \List\,A\]
+\item $\minCost$ from motivating example defined using $\cn{MinWith}$
+\item Soundness conditions for greedy algorithms can be proved for many practical examples
+\end{itemize}
+\end{frame}
+
+%\begin{frame}\frametitle{Open Issue}
+%\end{frame}
+
+\begin{frame}\frametitle{Summary}
+\begin{itemize}
+\item Program calculation can get awkward if non-deterministic specifications are around
+ \lec{e.g., minimal wrt to cost, or thinning wrt order}
+\item Elegant solution by allowing for non-deterministic functions
+\item Minimally invasive
+ \begin{itemize}
+ \item little new syntax
+ \item old syntax/semantics embeddable
+ \item only minor changes to rules 
+ \item some subtleties but manageable
+  \glec{formalization in logical framework helps}
+ \end{itemize}
+\item Many program calculation principles carry over
+ \lec{deserves systematic attention}
+\end{itemize}
+\end{frame}
+\end{document}
+
