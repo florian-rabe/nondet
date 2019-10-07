@@ -13,8 +13,7 @@
 \def\choice#1{\fold{\sqcap}{#1}}
 \def\prop{\cn{bool}}
 \def\pure#1{\mathit{pure}(#1)}
-\def\refine#1#2{#1\stackrel{\mathrm{ref}}{\leftarrow}#2}
-\def\refine#1#2{#1\stackrel{\mathrm{ref}}{\leftarrow}#2}
+\def\refine#1#2{#1\stackrel{\hlA{\mathrm{ref}}}{\hlA{\leftarrow}}#2}
 
 \def\der{\,\hlA{\vdash}\,}
 \def\syneq{\,\hlA{\doteq}\,}
@@ -46,7 +45,7 @@
 \title{How to calculate with nondeterministic functions}
 \author{Richard Bird and \underline{Florian Rabe}}
 \institute{Computer Science, Oxford University resp. University Erlangen-N\"urnberg}
-\date{July 2019}
+\date{MPC 2019}
 \begin{frame}
     \titlepage
 \end{frame}
@@ -61,7 +60,7 @@
  \item use equational reasoning to calculate correct programs
  \item optimize along the way
  \end{itemize}
- Example: \[h\,(\fold\,f\,e\,xs) = \fold\,F\,(h\,e)\, xs\]
+ Example: \[h\,(\foldr\,f\,e\,xs) = \foldr\,F\,(h\,e)\, xs\]
  try to solve for $F$ to get more efficient algorithm
 \item Richard's textbooks on functional programming
  \begin{itemize}
@@ -74,16 +73,16 @@
 
 \begin{frame}\frametitle{History}
 \begin{blockitems}{My background}
-\item not algorithms or functional programming
-\item formal systems (logics, type theories, foundations, DSLs, etc.)
-\item design, analysis, implementation
-\item applications to all STEM disciplines
+\item Not algorithms or functional programming
+\item Formal systems (logics, type theories, foundations, DSLs, etc.)
+\item Design, analysis, implementation of formal systems
+\item Applications to all STEM disciplines
 \end{blockitems}
 
 \begin{blockitems}{This work}
-\item Richard encountered problem with an elementary example
+\item Richard encountered problem with elementary examples
 \item He built bottom-up solution using non-deterministic functions
-\item I got involved in working out the formal details of the calculus
+\item I got involved in working out the formal details
 \end{blockitems}
 \lec{i.e., my contribution is arguably the less interesting part of this work :)}
 \end{frame}
@@ -100,7 +99,6 @@
  \begin{itemize}
  \item extend to $\lambda$-calculus with non-deterministic functions
  \item in a way that preserves existing notations and theorems
-  \lec{works well}
  \item mostly following the papers by Morris and Bunkenburg
  \end{itemize}
 \end{blockitems}
@@ -156,6 +154,7 @@ Two-step optimization process
 
 
 \begin{frame}\frametitle{A More Specific Setting}
+\color{gray}
 \[\genCand: \Input\to \List\, \Cand\]
 \[\minCost: \List\, \Cand \to \Cand\]
 \hrule
@@ -172,39 +171,40 @@ Two-step optimization process
 \end{frame}
 
 \begin{frame}\frametitle{Idea to Derive Efficient Algorithm}
-\begin{itemize}
-\item Fuse $\minCost$ and $\genCand$ into a single fold
-\item Greedy algorithm
-\begin{itemize}
-\item don't build all candidates, apply $\minCost$ once at the end
-\item apply $\minCost$ early on, extend only optimal candidates
-\end{itemize}
-\item Not necessarily sound:\\
-   \tb non-optimal candidates for small input \\
-   \tb might extend to \\
-   \tb optimal candidates for large input
-\end{itemize}
-
-\hrule
 \color{gray}
 \[\optimum\,\inp = \minCost\,(\genCand\,\inp)\]
 \[\genCand\, (x::xs) = \extCand\, x\,(\genCand\,xs)\]
 \[\genCand: \Input\to \List\, \Cand\]
 \[\minCost: \List\, \Cand \to \Cand\]
 \[\extCand\,x: Cand \to \List\,\Cand\]
+
+\hrule
+
+\begin{itemize}
+\item Fuse $\minCost$ and $\genCand$ into a single fold
+\item Greedy algorithm
+\begin{itemize}
+\item don't: build all candidates, apply $\minCost$ once at the end
+\item do: apply $\minCost$ early on, extend only optimal candidates
+\end{itemize}
+\item Not necessarily correct\\
+   \tb non-optimal candidates for small input \\
+   \tb might extend to \\
+   \tb optimal candidates for large input
+\end{itemize}
 \end{frame}
 
 \begin{frame}\frametitle{Solution through Program Calculation}
 Obtain a greedy algorithm from the specification
 \begin{enumerate}
-\item Assume \[\optimum\,\inp = \fold\, F\,c_0\,\inp\]
+\item Assume \[\optimum\,\inp = \foldr\, F\,c_0\,\inp\]
  \glec{($c_0$ is base solution for empty input)}
 and try to solve for folding function $F$
 \item<2-> Routine equational reasoning yields
 \begin{itemize}
   \item solution:
     \[F\,x\,c = \minCost\,(\extCand\,x\,c)\]
-  \item soundness condition:
+  \item correctness condition:
     \[\optimum\,(x::xs) = F\,x\,(\optimum\,xs)\]
 Intuition: solution $F\,x\,c$ for input $x::xs$ is \\ cheapest extension of solution $c$ for input $xs$
 \end{itemize}
@@ -215,7 +215,7 @@ Intuition: solution $F\,x\,c$ for input $x::xs$ is \\ cheapest extension of solu
 
 \begin{frame}\frametitle{A Subtle Problem}
 {{\color{gray}
-Soundness condition (from previous slide):
+Correctness condition (from previous slide):
   \[F\,x\,c = \minCost\,(\extCand\,x\,c)\]
   \[\optimum\,(x::xs) = F\,x\,(\optimum\,xs)\]
 optimal candidate for $x::xs$ must be \\ optimal extension of optimal candidate for $xs$
@@ -223,7 +223,7 @@ optimal candidate for $x::xs$ must be \\ optimal extension of optimal candidate 
 \hrule
 \vspace{.5cm}
 
-Soundness condition is intuitive and common\\
+Correctness condition is intuitive and common\\
 but subtly stronger than needed:
 \begin{itemize}
 \item $\optimum$ and $F$ defined in terms of $\minCost$
@@ -309,9 +309,9 @@ Additional base types/constants:
  \item $\prop:\type$
  \item logical connectives and quantifiers as usual, e.g.,
    \[\rul{\der s:A \tb \der t:A}{\der s\syneq t:\prop}\]
- \item refinement predicate
+ \item<2-> refinement predicate
    \[\rul{\der s:A \tb \der t:A}{\der \refine{s}{t}:\prop}\]
- \item purity predicate
+ \item<3-> purity predicate
    \[\rul{\der t:A}{\der \pure{t}:\prop}\]
 \end{itemize}
 \end{frame}
@@ -329,24 +329,30 @@ type $A$              & set $\sem{A}$ \\
 context declaring $x:A$ & environment mapping $\rho: x\mapsto \sem{A}$\\
 term $t:A$      & nonempty subset $\semr{t}\in\PP\sem{A}$\\
 refinement $\refine{s}{t}$ & subset $\semr{s}\sq\semr{t}$\\
-purity $\pure{t}$ for $t:A$  & $\semr{t}$ is generated by a single $v\in\sem{A}$\\
+purity $\pure{t}$ for $t:A$  & $\semr{t}$ is closure of a single $v\in\sem{A}$\\
 choice $\choice{s,t}$ & union $\semr{s}\cup\semr{t}$\\
 \hline
 \end{tabular}
 \end{center}
+
+Examples:
+\[\sem{\Z} = \text{usual integers}\]
+\[\semr{\choice{1,2}}=\{1,2\}\]
+\[\semr{(\lambda x:\Z.\choice{x,3x})\,1}=\{1,3\}\]
+\[\semr{(\lambda x:\Z.\choice{x,3x})\,(\choice{1,2})}=\{1,2,3,6\}\]
 \end{frame}
 
 \begin{frame}\frametitle{Semantics: Functions}
 Functions are interpreted as set-valued semantic functions:
-\[\sem{A\to B} = \sem{A}\Rightarrow\PP\sem{B}\]
+\[\sem{A\to B}\; =\; \sem{A}\Rightarrow\PP\sem{B}\]
 \glec{using $\Rightarrow$ for the usual set-theoretical function space}
 
 Function application is monotonous wrt refinement:
-\[\semr{f\,t} = \bigcup_{\phi\in\semr{f},\tau\in\semr{t}} \phi(\tau)\]
+\[\semr{f\,t} \; =\; \bigcup_{\phi\in\semr{f},\,\tau\in\semr{t}} \phi(\tau)\]
 
 \onslide<2>{
 The interpretation of a $\lambda$-abstractions is closed under refinements:
-\[\semr{\lambda x:A.t} = \big\{\phi\,|\, \text{ for all } \xi\in\sem{A}:\;\phi(\xi)\sq \seme{t}{\rho,x\mapsto \xi}\big\}\]
+\[\semr{\lambda x:A.t} \; =\; \big\{\phi\,|\, \text{ for all } \xi\in\sem{A}:\;\phi(\xi)\sq \seme{t}{\rho,x\mapsto \xi}\big\}\]
 %\in\sem{A}\Rightarrow\PP\sem{B}
 \glec{contains all deterministic functions that return refinements of $t$}
 }
@@ -379,7 +385,7 @@ Pure terms are interpreted as embeddings of singletons:
 \begin{frame}\frametitle{Overview}
 \begin{blockitems}{Akin to standard calculi for higher-order logic}
 \item Judgment $\Gamma\der F$ for a context $\Gamma$ and $F:\prop$
-\item Usual axioms/rules for equality and propositional connectives
+\item Essentially the usual axioms/rules
 \lec{modifications needed when variable binding is involved}
 \item Intuitive axioms/rules for choice and refinement
  \lec{technical difficulty to get purity right}
@@ -387,7 +393,7 @@ Pure terms are interpreted as embeddings of singletons:
 
 \begin{blockitems}{Multiple equivalent axiom systems}
 \item In the sequel, no distinction between primitive and derivable rules
-\item Very subtle in practice to prove derivability of rules
+\item Can be tricky in practice to intuit derivability of rules
  \lec{formalization in logical framework helps}
 \end{blockitems}
 \end{frame}
@@ -398,7 +404,7 @@ Pure terms are interpreted as embeddings of singletons:
 \begin{itemize}
 \item $\refine{s}{t}$ is an order (wrt $\syneq$)
 \item characteristic property:
-  \[\refine{s}{t} \tb\text{ iff }\tb \refine{u}{s} \text{ implies } \refine{t}{u} \text{ for all } u\]
+  \[\refine{s}{t} \tb\text{ iff }\tb \refine{u}{s} \text{ implies } \refine{u}{t} \text{ for all } u\]
 \end{itemize}
 \item<2-> General properties of choice
 \begin{itemize}
@@ -408,7 +414,7 @@ Pure terms are interpreted as embeddings of singletons:
 \end{itemize}
 \item<3-> Refinement of choice
 \begin{itemize}
-\item $\refine{u}{\choice{s,t}}$ refines to a pure term $u$ iff $s$ or $t$ does
+\item $\refine{u}{\choice{s,t}}$ refines to pure $u$ iff $s$ or $t$ does
 \item in particular, $\refine{t_i}{(\choice{t_1,t_2})}$
 \end{itemize}
 \end{itemize}
@@ -419,7 +425,7 @@ Pure terms are interpreted as embeddings of singletons:
 \item Purity predicate only present for technical reasons
 \item Pure are
 \begin{itemize}
-\item base constants applied to any number of pure arguments
+\item primitive constants applied to any number of pure arguments
 \item $\lambda$-abstractions
 \end{itemize}
  \glec{and thus all terms without $\sqcap$}
@@ -427,9 +433,9 @@ Pure terms are interpreted as embeddings of singletons:
 \begin{itemize}
  \item Semantic = use rule
   \[\rul{\der\pure{s} \tb \der s\syneq t}{\der\pure{t}}\]
-   \lec{thus $\choice{1,1}$ is pure}
+   \lec{thus $\choice{1,1}$ and $(\lambda x:\Z.\choice{x,1})\,1$ are pure}
  \item literature uses syntactic rules like ``variables are pure''
-   \lec{easier at first, trickier in the details}
+   \lec{easier at first, trickier in the formal details}
 \end{itemize}
 \end{itemize}
 \end{frame}
@@ -440,6 +446,7 @@ Pure terms are interpreted as embeddings of singletons:
 \item Distribution over choice:
 \[\der f\,(\choice{s,t}) \syneq \choice{(f\,s),(f\,t)}\]
 \[\der (\choice{f,g})\,t \syneq \choice{(f\,t),(g\,t)}\]
+\lec{Intuition: resolve non-determinism before applying a function}
 \item Monotonicity wrt refinement:
 \[\rul{\der \refine{f'}{f} \tb \refine{t'}{t}}{\der\refine{f'\,t'}{f\,t}}\]
 %\glec{accordingly for function composition}
@@ -457,12 +464,12 @@ Pure terms are interpreted as embeddings of singletons:
 
 \begin{frame}\frametitle{Beta-Conversion}
 Intuition: bound variable is pure, so only substitute with pure terms
-\[\rul{\der t:A \tb \pure{t}}{\der (\lambda x:A.t)\,s \syneq t[x/s]}\]
+\[\rul{\der s:A \tb \der\pure{s}}{\der (\lambda x:A.t)\,s \syneq t[x/s]}\]
 
 Counter-example if we omitted the purity condition
 \begin{itemize}
 \item Wrong:
-\[(\lambda x:\Z.x+x)(\choice{1,2})\syneq (\choice{1,2})+(\choice{1,2})\syneq\choice{2,3,4}\]
+\[(\lambda x:\Z.x+x)\,(\choice{1,2})\syneq (\choice{1,2})+(\choice{1,2})\syneq\choice{2,3,4}\]
 \item Correct:
 \[(\lambda x:\Z.x+x)\,(\choice{1,2})\syneq \choice{((\lambda x:\Z.x+x)\,1),((\lambda x:\Z.x+x)\,2)}\syneq\choice{2,4}\]
 \end{itemize}
@@ -471,11 +478,11 @@ Counter-example if we omitted the purity condition
 
 \begin{frame}\frametitle{Xi-Conversion}
 \begin{itemize}
-\item Equality conversion under a $\lambda$, congruence rule for binders
+\item Equality conversion under a $\lambda$ (= congruence rule for binders)
 \item Usual formulation
-\[\rul{x:A\der f\syneq g}{\der \lambda x:A.f\syneq \lambda x:A.g}\]
+\[\rul{x:A\der f(x)\syneq g(x)}{\der \lambda x:A.f(x)\syneq \lambda x:A.g(x)}\]
 \item Adjusted: bound variable is pure, so add purity assumption when traversing into a binder
-\[\rul{x:A,\;\pure{x}\der f\syneq g}{\der \lambda x:A.f\syneq \lambda x:A.g}\]
+\[\rul{x:A,\;\pure{x}\der f(x)\syneq g(x)}{\der \lambda x:A.f(x)\syneq \lambda x:A.g(x)}\]
  \glec{needed to discharge purity conditions of the other rules}
 \end{itemize}
 \lec{Computational intuition: functions can assume arguments to be pure}
@@ -488,8 +495,9 @@ Because $\lambda$-abstractions are pure, $\eta$ can only hold for pure functions
 Counter-example if we omitted the purity condition:
 \begin{itemize}
 \item Wrong:
-\[\choice{f,g} \syneq \lambda x:\Z.(\choice{f,g})\,x\syneq \lambda x:\Z.\choice{(f\,x),(g\,x)}\]
-\item Correct: \[\refine{\choice{f,g}}{\lambda x:\Z.\choice{(f\,x),(g\,x)}}\]
+\[\choice{f,g} \syneq \lambda x:\Z.(\choice{f,g})\,x\]
+\glec{even though they are extensionally equal}
+\item Correct: \[\refine{\choice{f,g}}{\lambda x:\Z.(\choice{f,g})\,x}\]
 but not the other way around
 \end{itemize}
 \lec{Computational intuition: choices under a $\lambda$ are resolved fresh each call}
@@ -534,7 +542,7 @@ Completeness
  \[\cn{MinWith}:\List\,A\to(A\to B)\to (B\to B\to\prop)\to A\]
  \[\cn{ThinBy}:\List\,A\to(A\to A\to\prop)\to \List\,A\]
 \item $\minCost$ from motivating example defined using $\cn{MinWith}$
-\item Soundness conditions for greedy algorithms can be proved for many practical examples
+\item Correctness conditions for calculating algorithms can be proved for many practical examples
 \end{itemize}
 \end{frame}
 
@@ -544,7 +552,6 @@ Completeness
 \begin{frame}\frametitle{Summary}
 \begin{itemize}
 \item Program calculation can get awkward if non-deterministic specifications are around
- \lec{e.g., minimal wrt to cost, or thinning wrt order}
 \item Elegant solution by allowing for non-deterministic functions
 \item Minimally invasive
  \begin{itemize}
