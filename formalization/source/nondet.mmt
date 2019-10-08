@@ -30,6 +30,9 @@ theory Syntax =
 
   /T A term is pure if it is a deterministic value, i.e., evaluates to a single value rather than a choice of values.❙ 
   pure : {A} tm A ⟶ type❘# pure 2❙
+
+  /T congruence rule for purity❙
+  pure_cong: {A,x,y:tm A} pure x ⟶ x == y ⟶ pure y❙
   
   # Types, Terms, and Their Rules❙
   
